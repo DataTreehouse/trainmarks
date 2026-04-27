@@ -29,11 +29,10 @@
     --stone-50:  #fafafa;
     --white: #ffffff;
     --fw-maplib: #2d6a4f;
-    --fw-oxigraph: #40916c;
-    --fw-rdflib: #95d5b2;
-    --fw-jena: #74c69d;
-    --fw-rdf4j: #b7e4c7;
-    --fw-qlever: #d8f3dc;
+    --fw-oxigraph: #3b82f6;
+    --fw-rdflib: #a3a3a3;
+    --fw-jena: #e85d3a;
+    --fw-rdf4j: #eab308;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -394,6 +393,13 @@
 
 <div class="container">
 
+<!-- ════════════ FRAMEWORK FILTER ════════════ -->
+<section>
+  <h2>Compare Frameworks</h2>
+  <p class="section-lead">Toggle frameworks on or off to customise all charts and tables below. At least one must remain active.</p>
+  <div class="fw-filter" id="global-filter"></div>
+</section>
+
 <!-- ════════════ FRAMEWORKS ════════════ -->
 <section>
   <h2>Frameworks</h2>
@@ -417,7 +423,7 @@
 <!-- ════════════ TEST DATA ════════════ -->
 <section>
   <h2>Test Data</h2>
-  <p class="section-lead">Synthetic e-commerce graph — customers, orders, products — generated with a fixed seed for reproducibility.</p>
+  <p class="section-lead">Synthetic e-commerce graph (customers, orders, products) generated with a fixed seed for reproducibility.</p>
   <div class="card">
     <table>
       <thead>
@@ -445,7 +451,7 @@
         <tr class="query-row" onclick="toggleQuery('q1')">
           <td><span class="expand-hint">&#9654;</span>Q1</td>
           <td>COUNT all triples</td>
-          <td>Trivial — full scan</td>
+          <td>Trivial, full scan</td>
         </tr>
         <tr class="query-detail" id="detail-q1">
           <td colspan="3"><div class="query-code-wrap"><span class="kw">SELECT</span> (<span class="kw">COUNT</span>(*) <span class="kw">AS</span> <span class="var">?count</span>) <span class="kw">WHERE</span> { <span class="var">?s</span> <span class="var">?p</span> <span class="var">?o</span> . }</div></td>
@@ -536,8 +542,6 @@
     <button class="scale-tab" onclick="switchIO('xlarge')">XLarge · 10M</button>
   </div>
 
-  <div class="fw-filter" id="io-filter"></div>
-
   <div class="chart-controls">
     <button class="toggle-log" id="io-log-toggle" onclick="toggleIOLog()">Log scale</button>
   </div>
@@ -581,27 +585,25 @@
     <button class="scale-tab" onclick="switchQuery('xlarge')">XLarge · 10M</button>
   </div>
 
-  <div class="fw-filter" id="query-filter"></div>
-
   <div class="chart-controls">
     <button class="toggle-log" id="query-log-toggle" onclick="toggleQueryLog()">Log scale</button>
   </div>
 
   <div class="chart-grid">
     <div class="chart-card">
-      <h4>Q1 — COUNT all triples</h4>
+      <h4>Q1: COUNT all triples</h4>
       <div class="chart-wrap"><canvas id="chart-q1"></canvas></div>
     </div>
     <div class="chart-card">
-      <h4>Q2 — GROUP BY + SUM</h4>
+      <h4>Q2: GROUP BY + SUM</h4>
       <div class="chart-wrap"><canvas id="chart-q2"></canvas></div>
     </div>
     <div class="chart-card">
-      <h4>Q3 — 3-entity join + filter</h4>
+      <h4>Q3: 3-entity join + filter</h4>
       <div class="chart-wrap"><canvas id="chart-q3"></canvas></div>
     </div>
     <div class="chart-card">
-      <h4>Q4 — OPTIONAL + GROUP BY</h4>
+      <h4>Q4: OPTIONAL + GROUP BY</h4>
       <div class="chart-wrap"><canvas id="chart-q4"></canvas></div>
     </div>
   </div>
@@ -617,14 +619,14 @@
 <!-- ════════════ SCALING ════════════ -->
 <section>
   <h2>Scaling Behavior</h2>
-  <p class="section-lead">How each framework handles growing data volumes — from 100K to 10M triples.</p>
+  <p class="section-lead">How each framework handles growing data volumes, from 100K to 10M triples.</p>
   <div class="chart-grid">
     <div class="chart-card">
-      <h4>Read Turtle — scaling across datasets</h4>
+      <h4>Read Turtle across scales</h4>
       <div class="chart-wrap"><canvas id="chart-scale-read"></canvas></div>
     </div>
     <div class="chart-card">
-      <h4>Q2 (Aggregation) — scaling across datasets</h4>
+      <h4>Q2 (Aggregation) across scales</h4>
       <div class="chart-wrap"><canvas id="chart-scale-q2"></canvas></div>
     </div>
   </div>
@@ -637,7 +639,7 @@
   <div class="obs-grid">
     <div class="obs-card">
       <h4>maplib dominates across the board</h4>
-      <p>With parallel reads and streaming queries, maplib leads on every operation at every scale. At 10M triples: Turtle read in 2.8s (Jena: 19s, RDF4J: 25s), Q2 aggregation in 18ms — 47x faster than RDF4J and 2445x faster than rdflib.</p>
+      <p>With parallel reads and streaming queries, maplib leads on every operation at every scale. At 10M triples: Turtle read in 2.8s (Jena: 19s, RDF4J: 25s), Q2 aggregation in 18ms, that is 47x faster than RDF4J and 2445x faster than rdflib.</p>
     </div>
     <div class="obs-card">
       <h4>The gap widens at scale</h4>
@@ -660,11 +662,11 @@
   <p class="section-lead">All benchmarks use the same data files and the same SPARQL queries. 5-minute timeout per operation.</p>
   <div class="method-grid">
     <div class="method-item">
-      <h4>Python — maplib, oxigraph, rdflib</h4>
+      <h4>Python: maplib, oxigraph, rdflib</h4>
       <p>time.perf_counter(), garbage collected between runs. Queries: best of 3 after warmup. maplib uses parallel=True for reads and streaming=True for queries.</p>
     </div>
     <div class="method-item">
-      <h4>Java — Jena, RDF4J</h4>
+      <h4>Java: Jena, RDF4J</h4>
       <p>System.nanoTime(), JVM warmed up with a full medium-dataset read before timing. Queries: best of 3 after warmup.</p>
     </div>
     <div class="method-item">
@@ -673,7 +675,7 @@
     </div>
     <div class="method-item">
       <h4>Machine</h4>
-      <p>Apple M3 Max, 36 GB RAM, macOS. maplib, Jena, RDF4J on native macOS. oxigraph and rdflib on Linux aarch64 VM (different hardware — cross-machine comparisons are directionally correct).</p>
+      <p>Apple M3 Max, 36 GB RAM, macOS. maplib, Jena, RDF4J on native macOS. oxigraph and rdflib on Linux aarch64 VM (different hardware, so cross-machine comparisons are directionally correct).</p>
     </div>
   </div>
 </section>
@@ -765,10 +767,10 @@ const DATA = {
 const FW_ORDER = ['maplib', 'oxigraph', 'rdflib', 'jena', 'rdf4j'];
 const FW_COLORS = {
   maplib:   '#2d6a4f',
-  oxigraph: '#40916c',
-  jena:     '#74c69d',
-  rdf4j:    '#b7e4c7',
+  oxigraph: '#3b82f6',
   rdflib:   '#a3a3a3',
+  jena:     '#e85d3a',
+  rdf4j:    '#eab308',
 };
 const FW_LABELS = {
   maplib: 'maplib',
@@ -1064,8 +1066,7 @@ function toggleQuery(qid) {
 }
 
 // ── Init ──
-buildFilter('io-filter', 'io');
-buildFilter('query-filter', 'query');
+buildFilter('global-filter', 'global');
 buildIOCharts('medium', false);
 buildQueryCharts('medium', false);
 buildTable('io-table', IO_OPS, IO_LABELS, 'medium');
