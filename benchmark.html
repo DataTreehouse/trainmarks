@@ -639,15 +639,15 @@
   <div class="obs-grid">
     <div class="obs-card">
       <h4>maplib dominates across the board</h4>
-      <p>With parallel reads and streaming queries, maplib leads on every operation at every scale. At 10M triples: Turtle read in 2.8s (Jena: 19s, RDF4J: 25s), Q2 aggregation in 18ms, that is 47x faster than RDF4J and 2445x faster than rdflib.</p>
+      <p>With parallel reads and streaming queries, maplib leads on every operation at every scale. At 10M triples: Turtle read in 3.4s (Jena: 19s, RDF4J: 25s), Q2 aggregation in 20ms, that is 43x faster than RDF4J and 2268x faster than rdflib.</p>
     </div>
     <div class="obs-card">
       <h4>The gap widens at scale</h4>
-      <p>maplib's advantage grows with dataset size. Q2 speedup vs RDF4J: 6x at 100K, 16x at 1M, 47x at 10M. The columnar engine (Polars/Arrow) shines on aggregation-heavy queries where row-oriented stores struggle.</p>
+      <p>maplib's advantage grows with dataset size. Q2 speedup vs RDF4J: 6x at 100K, 16x at 1M, 43x at 10M. The columnar engine (Polars/Arrow) shines on aggregation-heavy queries where row-oriented stores struggle.</p>
     </div>
     <div class="obs-card">
       <h4>rdflib hits a wall at 10M</h4>
-      <p>233s to read Turtle, 63s for Q4. At 10M triples rdflib is 84x slower than maplib on reads and 1500x slower on aggregation queries. Pure Python with no native acceleration simply can't keep up.</p>
+      <p>233s to read Turtle, 63s for Q4. At 10M triples rdflib is 68x slower than maplib on reads and 1283x slower on aggregation queries. Pure Python with no native acceleration simply can't keep up.</p>
     </div>
     <div class="obs-card">
       <h4>RDF4J surprises on queries at scale</h4>
@@ -702,8 +702,8 @@ const DATA = {
       q1: 0.01071, q2: 0.00346, q3: 0.00575, q4: 0.00683
     },
     xlarge: {
-      read_turtle: 2.78106, write_turtle: 0.67943, read_ntriples: 2.96400, write_ntriples: 0.65529,
-      q1: 0.12845, q2: 0.01817, q3: 0.03800, q4: 0.04177
+      read_turtle: 3.41082, write_turtle: 0.71813, read_ntriples: 3.35058, write_ntriples: 0.66824,
+      q1: 0.11730, q2: 0.01961, q3: 0.04432, q4: 0.04903
     }
   },
   oxigraph: {
