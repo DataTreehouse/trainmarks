@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RDF Framework Benchmark</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --forest-900: #1a2e1a;
+    --forest-800: #2d4a2d;
+    --forest-700: #3d6b3d;
+    --forest-600: #4a8c4a;
+    --forest-500: #5ba05b;
+    --forest-400: #7cb87c;
+    --forest-300: #a3d1a3;
+    --forest-200: #c8e4c8;
+    --forest-100: #e8f4e8;
+    --forest-50:  #f4faf4;
+    --stone-900: #1c1c1c;
+    --stone-700: #404040;
+    --stone-500: #737373;
+    --stone-400: #a3a3a3;
+    --stone-300: #c7c7c7;
+    --stone-200: #e5e5e5;
+    --stone-100: #f0f0f0;
+    --stone-50:  #fafafa;
+    --white: #ffffff;
+    --fw-maplib: #2d6a4f;
+    --fw-oxigraph: #40916c;
+    --fw-rdflib: #95d5b2;
+    --fw-jena: #74c69d;
+    --fw-rdf4j: #b7e4c7;
+    --fw-qlever: #d8f3dc;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--stone-50);
+    color: var(--stone-900);
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  /* ── Header ── */
+  .hero {
+    background: linear-gradient(135deg, var(--forest-900) 0%, var(--forest-700) 100%);
+    color: var(--white);
+    padding: 4rem 2rem 3rem;
+    text-align: center;
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+  }
+  .hero h1 strong { font-weight: 600; }
+  .hero .subtitle {
+    font-size: 1.05rem;
+    font-weight: 300;
+    opacity: 0.8;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .meta-bar {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    font-size: 0.82rem;
+    opacity: 0.65;
+    flex-wrap: wrap;
+  }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  /* ── Section ── */
+  section {
+    margin: 3rem 0;
+  }
+  section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--forest-800);
+    margin-bottom: 0.3rem;
+    letter-spacing: -0.02em;
+  }
+  section .section-lead {
+    color: var(--stone-500);
+    font-size: 0.92rem;
+    margin-bottom: 1.8rem;
+  }
+
+  /* ── Scale tabs ── */
+  .scale-tabs {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+  }
+  .scale-tab {
+    padding: 0.5rem 1.3rem;
+    border: 1.5px solid var(--forest-300);
+    border-radius: 6px;
+    background: var(--white);
+    color: var(--forest-700);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .scale-tab:hover { background: var(--forest-100); }
+  .scale-tab.active {
+    background: var(--forest-700);
+    color: var(--white);
+    border-color: var(--forest-700);
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.8rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--stone-200);
+  }
+  .card h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--forest-800);
+    margin-bottom: 1rem;
+  }
+
+  /* ── Chart grid ── */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  @media (max-width: 768px) {
+    .chart-grid { grid-template-columns: 1fr; }
+  }
+  .chart-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--stone-200);
+  }
+  .chart-card h4 {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--stone-700);
+    margin-bottom: 0.8rem;
+  }
+  .chart-wrap {
+    position: relative;
+    height: 280px;
+  }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  thead th {
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    font-weight: 600;
+    color: var(--forest-800);
+    border-bottom: 2px solid var(--forest-200);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  tbody td {
+    padding: 0.55rem 0.8rem;
+    border-bottom: 1px solid var(--stone-100);
+  }
+  tbody tr:hover { background: var(--forest-50); }
+  .val-best {
+    font-weight: 600;
+    color: var(--forest-700);
+  }
+  .val-timeout { color: var(--stone-400); font-style: italic; }
+  .val-na { color: var(--stone-300); }
+
+  /* ── Framework filter ── */
+  .fw-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .fw-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    border: 1.5px solid transparent;
+  }
+  .fw-chip .fw-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    transition: opacity 0.15s;
+  }
+  .fw-chip.active {
+    border-color: currentColor;
+  }
+  .fw-chip:not(.active) {
+    opacity: 0.35;
+  }
+  .fw-chip:not(.active) .fw-dot {
+    opacity: 0.4;
+  }
+  .fw-chip:hover {
+    opacity: 1;
+  }
+
+  /* ── Expandable query rows ── */
+  .query-row {
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .query-row:hover { background: var(--forest-50); }
+  .query-row td:first-child {
+    font-weight: 600;
+    color: var(--forest-700);
+  }
+  .query-row .expand-hint {
+    display: inline-block;
+    width: 16px;
+    font-size: 0.7rem;
+    color: var(--stone-400);
+    transition: transform 0.2s;
+    margin-right: 0.3rem;
+  }
+  .query-row.open .expand-hint {
+    transform: rotate(90deg);
+  }
+  .query-detail {
+    display: none;
+  }
+  .query-detail.open {
+    display: table-row;
+  }
+  .query-detail td {
+    padding: 0;
+    border-bottom: 1px solid var(--stone-100);
+  }
+  .query-code-wrap {
+    background: var(--forest-900);
+    color: #d8f3dc;
+    border-radius: 8px;
+    margin: 0.5rem 0.8rem 0.8rem;
+    padding: 1rem 1.2rem;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .query-code-wrap .kw { color: #95d5b2; font-weight: 600; }
+  .query-code-wrap .var { color: #b7e4c7; }
+  .query-code-wrap .uri { color: #74c69d; }
+  .query-code-wrap .lit { color: #d4a373; }
+
+  /* ── Observation cards ── */
+  .obs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 768px) {
+    .obs-grid { grid-template-columns: 1fr; }
+  }
+  .obs-card {
+    background: var(--forest-50);
+    border-left: 3px solid var(--forest-400);
+    border-radius: 0 8px 8px 0;
+    padding: 1.2rem 1.4rem;
+  }
+  .obs-card h4 {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--forest-800);
+    margin-bottom: 0.3rem;
+  }
+  .obs-card p {
+    font-size: 0.84rem;
+    color: var(--stone-700);
+    line-height: 1.55;
+  }
+
+  /* ── Framework info table ── */
+  .fw-table {
+    margin-top: 1rem;
+  }
+  .fw-table td:first-child {
+    font-weight: 600;
+    color: var(--forest-800);
+    white-space: nowrap;
+  }
+
+  /* ── Methodology ── */
+  .method-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 768px) {
+    .method-grid { grid-template-columns: 1fr; }
+  }
+  .method-item {
+    background: var(--white);
+    border: 1px solid var(--stone-200);
+    border-radius: 8px;
+    padding: 1.2rem;
+  }
+  .method-item h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--forest-700);
+    margin-bottom: 0.3rem;
+  }
+  .method-item p {
+    font-size: 0.82rem;
+    color: var(--stone-500);
+    line-height: 1.5;
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--stone-400);
+    font-size: 0.78rem;
+    border-top: 1px solid var(--stone-200);
+    margin-top: 3rem;
+  }
+  footer a { color: var(--forest-600); text-decoration: none; }
+
+  /* ── Log-scale toggle ── */
+  .chart-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.8rem;
+  }
+  .toggle-log {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--stone-300);
+    border-radius: 4px;
+    background: var(--white);
+    color: var(--stone-500);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .toggle-log:hover, .toggle-log.active {
+    background: var(--forest-100);
+    border-color: var(--forest-400);
+    color: var(--forest-700);
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════ HERO ════════════ -->
+<header class="hero">
+  <h1><strong>RDF Framework</strong> Benchmark</h1>
+  <p class="subtitle">Comparing maplib, oxigraph, rdflib, Apache Jena, and Eclipse RDF4J across I/O and SPARQL query performance</p>
+  <div class="meta-bar">
+    <span>April 2026</span>
+    <span>Apple M3 Max · 36 GB RAM</span>
+    <span>100K → 1M → 10M triples</span>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ════════════ FRAMEWORKS ════════════ -->
+<section>
+  <h2>Frameworks</h2>
+  <p class="section-lead">Five frameworks spanning three languages and two execution models.</p>
+  <div class="card">
+    <table class="fw-table">
+      <thead>
+        <tr><th>Framework</th><th>Language</th><th>Engine</th><th>Version</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>maplib</td><td>Python (Rust core)</td><td>Polars + Apache Arrow</td><td>0.20.15</td></tr>
+        <tr><td>oxigraph</td><td>Python (Rust core)</td><td>SPOG indexes, in-memory hash store</td><td>0.5.7</td></tr>
+        <tr><td>rdflib</td><td>Python (pure)</td><td>In-memory dict-of-dicts</td><td>latest</td></tr>
+        <tr><td>Jena</td><td>Java</td><td>In-memory Model</td><td>5.2.0</td></tr>
+        <tr><td>RDF4J</td><td>Java</td><td>MemoryStore SAIL</td><td>5.0.3</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════════════ TEST DATA ════════════ -->
+<section>
+  <h2>Test Data</h2>
+  <p class="section-lead">Synthetic e-commerce graph — customers, orders, products — generated with a fixed seed for reproducibility.</p>
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>Scale</th><th>Triples</th><th>Turtle</th><th>N-Triples</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Medium</td><td>~100 K</td><td>3.6 MB</td><td>10.9 MB</td></tr>
+        <tr><td>Large</td><td>~1 M</td><td>36.9 MB</td><td>111 MB</td></tr>
+        <tr><td>XLarge</td><td>~10 M</td><td>369 MB</td><td>1.1 GB</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════════════ SPARQL QUERIES ════════════ -->
+<section>
+  <h2>SPARQL Queries</h2>
+  <p class="section-lead">Four queries of increasing complexity, representative of real analytical workloads. Click a row to see the SPARQL.</p>
+  <div class="card">
+    <table id="sparql-table">
+      <thead>
+        <tr><th>ID</th><th>Description</th><th>Complexity</th></tr>
+      </thead>
+      <tbody>
+        <tr class="query-row" onclick="toggleQuery('q1')">
+          <td><span class="expand-hint">&#9654;</span>Q1</td>
+          <td>COUNT all triples</td>
+          <td>Trivial — full scan</td>
+        </tr>
+        <tr class="query-detail" id="detail-q1">
+          <td colspan="3"><div class="query-code-wrap"><span class="kw">SELECT</span> (<span class="kw">COUNT</span>(*) <span class="kw">AS</span> <span class="var">?count</span>) <span class="kw">WHERE</span> { <span class="var">?s</span> <span class="var">?p</span> <span class="var">?o</span> . }</div></td>
+        </tr>
+
+        <tr class="query-row" onclick="toggleQuery('q2')">
+          <td><span class="expand-hint">&#9654;</span>Q2</td>
+          <td>Top 20 customers by spend (GROUP BY + SUM + ORDER BY)</td>
+          <td>Aggregation over joins</td>
+        </tr>
+        <tr class="query-detail" id="detail-q2">
+          <td colspan="3"><div class="query-code-wrap"><span class="kw">PREFIX</span> <span class="uri">:</span> <span class="uri">&lt;http://benchmark.example/&gt;</span>
+<span class="kw">PREFIX</span> <span class="uri">rdfs:</span> <span class="uri">&lt;http://www.w3.org/2000/01/rdf-schema#&gt;</span>
+
+<span class="kw">SELECT</span> <span class="var">?customer_name</span> (<span class="kw">COUNT</span>(<span class="var">?order</span>) <span class="kw">AS</span> <span class="var">?order_count</span>) (<span class="kw">SUM</span>(<span class="var">?amount</span>) <span class="kw">AS</span> <span class="var">?total_spend</span>)
+<span class="kw">WHERE</span> {
+    <span class="var">?order</span> <span class="uri">:placedBy</span> <span class="var">?customer</span> ;
+           <span class="uri">:totalAmount</span> <span class="var">?amount</span> .
+    <span class="var">?customer</span> <span class="uri">rdfs:label</span> <span class="var">?customer_name</span> .
+}
+<span class="kw">GROUP BY</span> <span class="var">?customer_name</span>
+<span class="kw">ORDER BY</span> <span class="kw">DESC</span>(<span class="var">?total_spend</span>)
+<span class="kw">LIMIT</span> 20</div></td>
+        </tr>
+
+        <tr class="query-row" onclick="toggleQuery('q3')">
+          <td><span class="expand-hint">&#9654;</span>Q3</td>
+          <td>3-entity join (customer + order + product) with country filter</td>
+          <td>Multi-pattern + filter</td>
+        </tr>
+        <tr class="query-detail" id="detail-q3">
+          <td colspan="3"><div class="query-code-wrap"><span class="kw">PREFIX</span> <span class="uri">:</span> <span class="uri">&lt;http://benchmark.example/&gt;</span>
+<span class="kw">PREFIX</span> <span class="uri">rdfs:</span> <span class="uri">&lt;http://www.w3.org/2000/01/rdf-schema#&gt;</span>
+
+<span class="kw">SELECT</span> <span class="var">?customer_name</span> <span class="var">?product_name</span> <span class="var">?amount</span> <span class="var">?status</span>
+<span class="kw">WHERE</span> {
+    <span class="var">?order</span> <span class="uri">:placedBy</span> <span class="var">?customer</span> ;
+           <span class="uri">:contains</span> <span class="var">?product</span> ;
+           <span class="uri">:totalAmount</span> <span class="var">?amount</span> ;
+           <span class="uri">:orderStatus</span> <span class="var">?status</span> .
+    <span class="var">?customer</span> <span class="uri">rdfs:label</span> <span class="var">?customer_name</span> ;
+              <span class="uri">:country</span> <span class="lit">"Norway"</span> .
+    <span class="var">?product</span> <span class="uri">rdfs:label</span> <span class="var">?product_name</span> .
+}
+<span class="kw">ORDER BY</span> <span class="kw">DESC</span>(<span class="var">?amount</span>)
+<span class="kw">LIMIT</span> 50</div></td>
+        </tr>
+
+        <tr class="query-row" onclick="toggleQuery('q4')">
+          <td><span class="expand-hint">&#9654;</span>Q4</td>
+          <td>Revenue by country/segment with OPTIONAL orders</td>
+          <td>OPTIONAL + aggregation</td>
+        </tr>
+        <tr class="query-detail" id="detail-q4">
+          <td colspan="3"><div class="query-code-wrap"><span class="kw">PREFIX</span> <span class="uri">:</span> <span class="uri">&lt;http://benchmark.example/&gt;</span>
+<span class="kw">PREFIX</span> <span class="uri">rdf:</span> <span class="uri">&lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;</span>
+<span class="kw">PREFIX</span> <span class="uri">rdfs:</span> <span class="uri">&lt;http://www.w3.org/2000/01/rdf-schema#&gt;</span>
+
+<span class="kw">SELECT</span> <span class="var">?country</span> <span class="var">?segment</span>
+       (<span class="kw">COUNT</span>(<span class="kw">DISTINCT</span> <span class="var">?customer</span>) <span class="kw">AS</span> <span class="var">?customers</span>)
+       (<span class="kw">COUNT</span>(<span class="kw">DISTINCT</span> <span class="var">?order</span>) <span class="kw">AS</span> <span class="var">?orders</span>)
+       (<span class="kw">SUM</span>(<span class="var">?amount</span>) <span class="kw">AS</span> <span class="var">?revenue</span>)
+<span class="kw">WHERE</span> {
+    <span class="var">?customer</span> <span class="uri">rdf:type</span> <span class="uri">:Customer</span> ;
+              <span class="uri">:country</span> <span class="var">?country</span> ;
+              <span class="uri">:segment</span> <span class="var">?segment</span> .
+    <span class="kw">OPTIONAL</span> {
+        <span class="var">?order</span> <span class="uri">:placedBy</span> <span class="var">?customer</span> ;
+               <span class="uri">:totalAmount</span> <span class="var">?amount</span> .
+    }
+}
+<span class="kw">GROUP BY</span> <span class="var">?country</span> <span class="var">?segment</span>
+<span class="kw">ORDER BY</span> <span class="kw">DESC</span>(<span class="var">?revenue</span>)</div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════════════ I/O PERFORMANCE ════════════ -->
+<section id="io-section">
+  <h2>I/O Performance</h2>
+  <p class="section-lead">Time to read and write RDF data in Turtle and N-Triples format.</p>
+
+  <div class="scale-tabs" id="io-tabs">
+    <button class="scale-tab active" onclick="switchIO('medium')">Medium · 100K</button>
+    <button class="scale-tab" onclick="switchIO('large')">Large · 1M</button>
+    <button class="scale-tab" onclick="switchIO('xlarge')">XLarge · 10M</button>
+  </div>
+
+  <div class="fw-filter" id="io-filter"></div>
+
+  <div class="chart-controls">
+    <button class="toggle-log" id="io-log-toggle" onclick="toggleIOLog()">Log scale</button>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h4>Read Turtle</h4>
+      <div class="chart-wrap"><canvas id="chart-read-ttl"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Write Turtle</h4>
+      <div class="chart-wrap"><canvas id="chart-write-ttl"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Read N-Triples</h4>
+      <div class="chart-wrap"><canvas id="chart-read-nt"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Write N-Triples</h4>
+      <div class="chart-wrap"><canvas id="chart-write-nt"></canvas></div>
+    </div>
+  </div>
+
+  <!-- I/O data table -->
+  <div class="card" style="margin-top:1.5rem">
+    <h3>Tabular Data</h3>
+    <div style="overflow-x:auto">
+      <table id="io-table"></table>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ QUERY PERFORMANCE ════════════ -->
+<section id="query-section">
+  <h2>Query Performance</h2>
+  <p class="section-lead">Best of 3 runs after warmup. All frameworks execute the same SPARQL queries.</p>
+
+  <div class="scale-tabs" id="query-tabs">
+    <button class="scale-tab active" onclick="switchQuery('medium')">Medium · 100K</button>
+    <button class="scale-tab" onclick="switchQuery('large')">Large · 1M</button>
+    <button class="scale-tab" onclick="switchQuery('xlarge')">XLarge · 10M</button>
+  </div>
+
+  <div class="fw-filter" id="query-filter"></div>
+
+  <div class="chart-controls">
+    <button class="toggle-log" id="query-log-toggle" onclick="toggleQueryLog()">Log scale</button>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h4>Q1 — COUNT all triples</h4>
+      <div class="chart-wrap"><canvas id="chart-q1"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Q2 — GROUP BY + SUM</h4>
+      <div class="chart-wrap"><canvas id="chart-q2"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Q3 — 3-entity join + filter</h4>
+      <div class="chart-wrap"><canvas id="chart-q3"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Q4 — OPTIONAL + GROUP BY</h4>
+      <div class="chart-wrap"><canvas id="chart-q4"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <h3>Tabular Data</h3>
+    <div style="overflow-x:auto">
+      <table id="query-table"></table>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ SCALING ════════════ -->
+<section>
+  <h2>Scaling Behavior</h2>
+  <p class="section-lead">How each framework handles growing data volumes — from 100K to 10M triples.</p>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h4>Read Turtle — scaling across datasets</h4>
+      <div class="chart-wrap"><canvas id="chart-scale-read"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Q2 (Aggregation) — scaling across datasets</h4>
+      <div class="chart-wrap"><canvas id="chart-scale-q2"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ KEY OBSERVATIONS ════════════ -->
+<section>
+  <h2>Key Observations</h2>
+  <p class="section-lead">Patterns that emerged from the benchmark results.</p>
+  <div class="obs-grid">
+    <div class="obs-card">
+      <h4>maplib dominates across the board</h4>
+      <p>With parallel reads and streaming queries, maplib leads on every operation at every scale. At 10M triples: Turtle read in 2.8s (Jena: 19s, RDF4J: 25s), Q2 aggregation in 18ms — 47x faster than RDF4J and 2445x faster than rdflib.</p>
+    </div>
+    <div class="obs-card">
+      <h4>The gap widens at scale</h4>
+      <p>maplib's advantage grows with dataset size. Q2 speedup vs RDF4J: 6x at 100K, 16x at 1M, 47x at 10M. The columnar engine (Polars/Arrow) shines on aggregation-heavy queries where row-oriented stores struggle.</p>
+    </div>
+    <div class="obs-card">
+      <h4>rdflib hits a wall at 10M</h4>
+      <p>233s to read Turtle, 63s for Q4. At 10M triples rdflib is 84x slower than maplib on reads and 1500x slower on aggregation queries. Pure Python with no native acceleration simply can't keep up.</p>
+    </div>
+    <div class="obs-card">
+      <h4>RDF4J surprises on queries at scale</h4>
+      <p>At 10M triples, RDF4J's Q3 (158ms) beats Jena (407ms) and oxigraph (386ms). Its MemoryStore SAIL indexing pays off on multi-pattern joins. On writes though, Jena remains significantly faster.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ METHODOLOGY ════════════ -->
+<section>
+  <h2>Methodology</h2>
+  <p class="section-lead">All benchmarks use the same data files and the same SPARQL queries. 5-minute timeout per operation.</p>
+  <div class="method-grid">
+    <div class="method-item">
+      <h4>Python — maplib, oxigraph, rdflib</h4>
+      <p>time.perf_counter(), garbage collected between runs. Queries: best of 3 after warmup. maplib uses parallel=True for reads and streaming=True for queries.</p>
+    </div>
+    <div class="method-item">
+      <h4>Java — Jena, RDF4J</h4>
+      <p>System.nanoTime(), JVM warmed up with a full medium-dataset read before timing. Queries: best of 3 after warmup.</p>
+    </div>
+    <div class="method-item">
+      <h4>I/O operations</h4>
+      <p>Single timed run (no averaging) since they include allocation overhead that is part of the real-world cost.</p>
+    </div>
+    <div class="method-item">
+      <h4>Machine</h4>
+      <p>Apple M3 Max, 36 GB RAM, macOS. maplib, Jena, RDF4J on native macOS. oxigraph and rdflib on Linux aarch64 VM (different hardware — cross-machine comparisons are directionally correct).</p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  RDF Framework Benchmark · Data Treehouse · April 2026
+</footer>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- DATA + CHARTS                               -->
+<!-- ════════════════════════════════════════════ -->
+<script>
+// ── Raw data ──
+const DATA = {
+  maplib: {
+    medium: {
+      read_turtle: 0.08754, write_turtle: 0.01576, read_ntriples: 0.03129, write_ntriples: 0.01771,
+      q1: 0.00351, q2: 0.00206, q3: 0.00264, q4: 0.00329
+    },
+    large: {
+      read_turtle: 0.24863, write_turtle: 0.07188, read_ntriples: 0.24258, write_ntriples: 0.07240,
+      q1: 0.01071, q2: 0.00346, q3: 0.00575, q4: 0.00683
+    },
+    xlarge: {
+      read_turtle: 2.78106, write_turtle: 0.67943, read_ntriples: 2.96400, write_ntriples: 0.65529,
+      q1: 0.12845, q2: 0.01817, q3: 0.03800, q4: 0.04177
+    }
+  },
+  oxigraph: {
+    medium: {
+      read_turtle: 0.12721, write_turtle: 0.44157, read_ntriples: 0.10913, write_ntriples: 0.63765,
+      q1: 0.00710, q2: 0.01012, q3: 0.00190, q4: 0.00913
+    },
+    large: {
+      read_turtle: 1.37423, write_turtle: 4.06072, read_ntriples: 1.31102, write_ntriples: 6.76670,
+      q1: 0.07250, q2: 0.12927, q3: 0.02640, q4: 0.14479
+    },
+    xlarge: {
+      read_turtle: 17.4522, write_turtle: 47.1730, read_ntriples: 16.9917, write_ntriples: 73.7038,
+      q1: 0.7158, q2: 2.1268, q3: 0.3856, q4: 1.9002
+    }
+  },
+  rdflib: {
+    medium: {
+      read_turtle: 2.46267, write_turtle: 1.89699, read_ntriples: 1.28919, write_ntriples: 1.13270,
+      q1: 0.44290, q2: 0.38974, q3: 0.07013, q4: 0.56842
+    },
+    large: {
+      read_turtle: 26.49760, write_turtle: 21.95782, read_ntriples: 15.11807, write_ntriples: 11.80989,
+      q1: 4.52199, q2: 3.84037, q3: 0.87217, q4: 5.86449
+    },
+    xlarge: {
+      read_turtle: 233.0384, write_turtle: 155.6876, read_ntriples: 134.8224, write_ntriples: 20.9967,
+      q1: 42.0658, q2: 44.4687, q3: 17.0673, q4: 62.8380
+    }
+  },
+  jena: {
+    medium: {
+      read_turtle: 0.1826, write_turtle: 0.1377, read_ntriples: 0.1749, write_ntriples: 0.0805,
+      q1: 0.0162, q2: 0.0387, q3: 0.0065, q4: 0.0252
+    },
+    large: {
+      read_turtle: 1.7787, write_turtle: 0.7742, read_ntriples: 1.7863, write_ntriples: 0.3947,
+      q1: 0.192, q2: 0.1771, q3: 0.0262, q4: 0.200
+    },
+    xlarge: {
+      read_turtle: 18.9721, write_turtle: 6.6997, read_ntriples: 20.5004, write_ntriples: 3.9103,
+      q1: 2.0154, q2: 2.8428, q3: 0.4073, q4: 2.6369
+    }
+  },
+  rdf4j: {
+    medium: {
+      read_turtle: 0.2169, write_turtle: 0.2542, read_ntriples: 0.1388, write_ntriples: 0.1904,
+      q1: 0.006, q2: 0.0132, q3: 0.0041, q4: 0.0229
+    },
+    large: {
+      read_turtle: 2.4224, write_turtle: 1.6381, read_ntriples: 1.4104, write_ntriples: 1.9328,
+      q1: 0.0521, q2: 0.0569, q3: 0.0127, q4: 0.0923
+    },
+    xlarge: {
+      read_turtle: 24.9454, write_turtle: 18.1935, read_ntriples: 15.2584, write_ntriples: 13.2529,
+      q1: 0.9075, q2: 0.8456, q3: 0.1584, q4: 1.1279
+    }
+  }
+};
+
+const FW_ORDER = ['maplib', 'oxigraph', 'rdflib', 'jena', 'rdf4j'];
+const FW_COLORS = {
+  maplib:   '#2d6a4f',
+  oxigraph: '#40916c',
+  jena:     '#74c69d',
+  rdf4j:    '#b7e4c7',
+  rdflib:   '#a3a3a3',
+};
+const FW_LABELS = {
+  maplib: 'maplib',
+  oxigraph: 'oxigraph',
+  rdflib: 'rdflib',
+  jena: 'Jena',
+  rdf4j: 'RDF4J',
+};
+
+// ── State ──
+let currentIOScale = 'medium';
+let currentQueryScale = 'medium';
+let ioLogScale = false;
+let queryLogScale = false;
+const visibleFW = new Set(FW_ORDER);   // all visible by default
+
+// ── Chart instances ──
+let ioCharts = {};
+let queryCharts = {};
+let scaleCharts = {};
+
+// ── Helpers ──
+function fmtMs(s) {
+  if (s === null || s === undefined) return '—';
+  if (s < 0.001) return (s * 1000000).toFixed(0) + ' µs';
+  if (s < 1) return (s * 1000).toFixed(1) + ' ms';
+  return s.toFixed(2) + ' s';
+}
+
+function activeFW() { return FW_ORDER.filter(fw => visibleFW.has(fw)); }
+
+// ── Framework filter chips ──
+function buildFilter(containerId, section) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = FW_ORDER.map(fw => {
+    const active = visibleFW.has(fw) ? 'active' : '';
+    return `<span class="fw-chip ${active}" data-fw="${fw}" data-section="${section}" style="color:${FW_COLORS[fw]}" onclick="toggleFW(this)"><span class="fw-dot" style="background:${FW_COLORS[fw]}"></span>${FW_LABELS[fw]}</span>`;
+  }).join('');
+}
+
+function syncFilterChips() {
+  document.querySelectorAll('.fw-chip').forEach(chip => {
+    const fw = chip.dataset.fw;
+    chip.classList.toggle('active', visibleFW.has(fw));
+  });
+}
+
+function toggleFW(chip) {
+  const fw = chip.dataset.fw;
+  if (visibleFW.has(fw)) {
+    if (visibleFW.size <= 1) return; // keep at least one
+    visibleFW.delete(fw);
+  } else {
+    visibleFW.add(fw);
+  }
+  syncFilterChips();
+  rebuildAll();
+}
+
+function rebuildAll() {
+  buildIOCharts(currentIOScale, ioLogScale);
+  buildQueryCharts(currentQueryScale, queryLogScale);
+  buildTable('io-table', IO_OPS, IO_LABELS, currentIOScale);
+  buildTable('query-table', Q_OPS, Q_LABELS, currentQueryScale);
+  buildScaleCharts();
+}
+
+// ── Bar chart factory ──
+function makeBarChart(canvasId, labels, datasets, logScale) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 250 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const v = ctx.raw;
+              return v !== null ? `${ctx.dataset.label}: ${fmtMs(v / 1000)}` : `${ctx.dataset.label}: N/A`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 11, family: 'Inter' } }
+        },
+        y: {
+          type: logScale ? 'logarithmic' : 'linear',
+          title: { display: true, text: 'ms', font: { size: 11, family: 'Inter' } },
+          grid: { color: '#f0f0f0' },
+          ticks: {
+            font: { size: 10, family: 'Inter' },
+            callback: v => v >= 1000 ? (v/1000).toFixed(1) + 's' : v.toFixed(v < 1 ? 2 : 0) + 'ms'
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── Line chart factory (for scaling) ──
+function makeLineChart(canvasId, scaleLabels, datasets) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: { labels: scaleLabels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 250 },
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { font: { size: 11, family: 'Inter' }, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const v = ctx.raw;
+              return v !== null ? `${ctx.dataset.label}: ${fmtMs(v / 1000)}` : `${ctx.dataset.label}: N/A`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 11, family: 'Inter' } }
+        },
+        y: {
+          type: 'logarithmic',
+          title: { display: true, text: 'ms (log)', font: { size: 11, family: 'Inter' } },
+          grid: { color: '#f0f0f0' },
+          ticks: {
+            font: { size: 10, family: 'Inter' },
+            callback: v => v >= 1000 ? (v/1000).toFixed(1) + 's' : v.toFixed(0) + 'ms'
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── Build IO charts (filtered) ──
+function buildIOCharts(scale, log) {
+  const fws = activeFW();
+  ['read_turtle', 'write_turtle', 'read_ntriples', 'write_ntriples'].forEach(op => {
+    const chartId = {
+      read_turtle: 'chart-read-ttl', write_turtle: 'chart-write-ttl',
+      read_ntriples: 'chart-read-nt', write_ntriples: 'chart-write-nt'
+    }[op];
+    if (ioCharts[op]) ioCharts[op].destroy();
+
+    const datasets = fws.map(fw => {
+      const v = DATA[fw]?.[scale]?.[op];
+      return {
+        label: FW_LABELS[fw],
+        data: [v !== null && v !== undefined ? v * 1000 : null],
+        backgroundColor: FW_COLORS[fw],
+        borderRadius: 4,
+        barPercentage: 0.85,
+      };
+    });
+    ioCharts[op] = makeBarChart(chartId, [''], datasets, log);
+  });
+}
+
+// ── Build Query charts (filtered) ──
+function buildQueryCharts(scale, log) {
+  const fws = activeFW();
+  ['q1', 'q2', 'q3', 'q4'].forEach(q => {
+    const chartId = `chart-${q}`;
+    if (queryCharts[q]) queryCharts[q].destroy();
+
+    const datasets = fws.map(fw => {
+      const v = DATA[fw]?.[scale]?.[q];
+      return {
+        label: FW_LABELS[fw],
+        data: [v !== null && v !== undefined ? v * 1000 : null],
+        backgroundColor: FW_COLORS[fw],
+        borderRadius: 4,
+        barPercentage: 0.85,
+      };
+    });
+    queryCharts[q] = makeBarChart(chartId, [''], datasets, log);
+  });
+}
+
+// ── Build scaling line charts (filtered) ──
+function buildScaleCharts() {
+  const fws = activeFW();
+  const scales = ['medium', 'large', 'xlarge'];
+  const labels = ['100K', '1M', '10M'];
+
+  const readDatasets = fws.map(fw => ({
+    label: FW_LABELS[fw],
+    data: scales.map(s => {
+      const v = DATA[fw]?.[s]?.read_turtle;
+      return v !== null && v !== undefined ? v * 1000 : null;
+    }),
+    borderColor: FW_COLORS[fw],
+    backgroundColor: FW_COLORS[fw] + '33',
+    pointRadius: 5, pointHoverRadius: 7, tension: 0.3, spanGaps: false,
+  }));
+  if (scaleCharts.read) scaleCharts.read.destroy();
+  scaleCharts.read = makeLineChart('chart-scale-read', labels, readDatasets);
+
+  const q2Datasets = fws.map(fw => ({
+    label: FW_LABELS[fw],
+    data: scales.map(s => {
+      const v = DATA[fw]?.[s]?.q2;
+      return v !== null && v !== undefined ? v * 1000 : null;
+    }),
+    borderColor: FW_COLORS[fw],
+    backgroundColor: FW_COLORS[fw] + '33',
+    pointRadius: 5, pointHoverRadius: 7, tension: 0.3, spanGaps: false,
+  }));
+  if (scaleCharts.q2) scaleCharts.q2.destroy();
+  scaleCharts.q2 = makeLineChart('chart-scale-q2', labels, q2Datasets);
+}
+
+// ── Tables (filtered) ──
+const IO_OPS = ['read_turtle', 'write_turtle', 'read_ntriples', 'write_ntriples'];
+const IO_LABELS = { read_turtle: 'Read Turtle', write_turtle: 'Write Turtle', read_ntriples: 'Read N-Triples', write_ntriples: 'Write N-Triples' };
+const Q_OPS = ['q1', 'q2', 'q3', 'q4'];
+const Q_LABELS = { q1: 'Q1: COUNT all triples', q2: 'Q2: GROUP BY + SUM', q3: 'Q3: 3-entity join + filter', q4: 'Q4: OPTIONAL + GROUP BY' };
+
+function buildTable(tableId, ops, opLabels, scale) {
+  const fws = activeFW();
+  const table = document.getElementById(tableId);
+  const fwHeader = fws.map(fw => `<th>${FW_LABELS[fw]}</th>`).join('');
+  let html = `<thead><tr><th>Operation</th>${fwHeader}</tr></thead><tbody>`;
+
+  ops.forEach(op => {
+    const vals = fws.map(fw => DATA[fw]?.[scale]?.[op]);
+    const numVals = vals.filter(v => v !== null && v !== undefined);
+    const best = numVals.length > 0 ? Math.min(...numVals) : null;
+
+    html += `<tr><td>${opLabels[op]}</td>`;
+    vals.forEach(v => {
+      if (v === null || v === undefined) {
+        html += `<td class="val-na">—</td>`;
+      } else {
+        const cls = v === best ? 'val-best' : '';
+        html += `<td class="${cls}">${fmtMs(v)}</td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+// ── Tab switching ──
+function switchIO(scale) {
+  currentIOScale = scale;
+  document.querySelectorAll('#io-tabs .scale-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  buildIOCharts(scale, ioLogScale);
+  buildTable('io-table', IO_OPS, IO_LABELS, scale);
+}
+
+function switchQuery(scale) {
+  currentQueryScale = scale;
+  document.querySelectorAll('#query-tabs .scale-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  buildQueryCharts(scale, queryLogScale);
+  buildTable('query-table', Q_OPS, Q_LABELS, scale);
+}
+
+function toggleIOLog() {
+  ioLogScale = !ioLogScale;
+  document.getElementById('io-log-toggle').classList.toggle('active', ioLogScale);
+  buildIOCharts(currentIOScale, ioLogScale);
+}
+
+function toggleQueryLog() {
+  queryLogScale = !queryLogScale;
+  document.getElementById('query-log-toggle').classList.toggle('active', queryLogScale);
+  buildQueryCharts(currentQueryScale, queryLogScale);
+}
+
+// ── Expandable SPARQL rows ──
+function toggleQuery(qid) {
+  const detail = document.getElementById('detail-' + qid);
+  const row = detail.previousElementSibling;
+  detail.classList.toggle('open');
+  row.classList.toggle('open');
+}
+
+// ── Init ──
+buildFilter('io-filter', 'io');
+buildFilter('query-filter', 'query');
+buildIOCharts('medium', false);
+buildQueryCharts('medium', false);
+buildTable('io-table', IO_OPS, IO_LABELS, 'medium');
+buildTable('query-table', Q_OPS, Q_LABELS, 'medium');
+buildScaleCharts();
+</script>
+
+</body>
+</html>

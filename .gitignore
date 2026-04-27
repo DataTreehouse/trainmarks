@@ -1,0 +1,21 @@
+# Generated data (reproducible via generate_data.py)
+data/
+
+# Generated queries (reproducible via generate_data.py)
+queries/
+
+# Benchmark results (re-run to regenerate)
+results/
+
+# Java build artifacts
+java-jena/target/
+java-rdf4j/target/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
