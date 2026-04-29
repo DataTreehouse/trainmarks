@@ -33,6 +33,13 @@
     --fw-rdflib: #a3a3a3;
     --fw-jena: #e85d3a;
     --fw-rdf4j: #eab308;
+    --fw-qlever: #9333ea;
+    --fw-kolibrie: #f472b6;
+    --fw-virtuoso: #06b6d4;
+    --fw-maplib-disk: #52796f;
+    --fw-graphdb: #ff6f00;
+    --fw-dotnetrdf: #8b5cf6;
+    --fw-neo4j: #018bff;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -232,6 +239,35 @@
     opacity: 1;
   }
 
+  /* ── Preset toggle buttons ── */
+  .preset-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .preset-btn {
+    padding: 0.4rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid var(--stone-300);
+    background: var(--white);
+    color: var(--stone-700);
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .preset-btn:hover {
+    border-color: var(--forest-500);
+    color: var(--forest-700);
+  }
+  .preset-btn.active {
+    border-color: var(--forest-600);
+    background: var(--forest-600);
+    color: var(--white);
+  }
+
   /* ── Expandable query rows ── */
   .query-row {
     cursor: pointer;
@@ -383,7 +419,7 @@
 <!-- ════════════ HERO ════════════ -->
 <header class="hero">
   <h1><strong>RDF Framework</strong> Benchmark</h1>
-  <p class="subtitle">Comparing maplib, oxigraph, rdflib, Apache Jena, and Eclipse RDF4J across I/O and SPARQL query performance</p>
+  <p class="subtitle">Comparing twelve RDF frameworks and triplestores across I/O and SPARQL query performance at 100K, 1M, and 10M triples</p>
   <div class="meta-bar">
     <span>April 2026</span>
     <span>Apple M3 Max · 36 GB RAM</span>
@@ -397,26 +433,43 @@
 <section>
   <h2>Compare Frameworks</h2>
   <p class="section-lead">Toggle frameworks on or off to customise all charts and tables below. At least one must remain active.</p>
+  <div class="preset-bar" id="preset-bar">
+    <span class="preset-btn active" onclick="applyPreset('all')">All</span>
+    <span class="preset-btn" onclick="applyPreset('memory')">In-memory</span>
+    <span class="preset-btn" onclick="applyPreset('disk')">Disk / server</span>
+    <span class="preset-btn" onclick="applyPreset('python')">Python</span>
+    <span class="preset-btn" onclick="applyPreset('docker')">Docker-based</span>
+  </div>
   <div class="fw-filter" id="global-filter"></div>
 </section>
 
 <!-- ════════════ FRAMEWORKS ════════════ -->
 <section>
   <h2>Frameworks</h2>
-  <p class="section-lead">Five frameworks spanning three languages and two execution models.</p>
+  <p class="section-lead">Ten configurations spanning five languages and multiple execution models.</p>
   <div class="card">
     <table class="fw-table">
       <thead>
-        <tr><th>Framework</th><th>Language</th><th>Engine</th><th>Version</th></tr>
+        <tr><th>Framework</th><th>Language</th><th>Engine</th><th>Version</th><th>License</th></tr>
       </thead>
       <tbody>
-        <tr><td>maplib</td><td>Python (Rust core)</td><td>Polars + Apache Arrow</td><td>0.20.15</td></tr>
-        <tr><td>oxigraph</td><td>Python (Rust core)</td><td>SPOG indexes, in-memory hash store</td><td>0.5.7</td></tr>
-        <tr><td>rdflib</td><td>Python (pure)</td><td>In-memory dict-of-dicts</td><td>latest</td></tr>
-        <tr><td>Jena</td><td>Java</td><td>In-memory Model</td><td>5.2.0</td></tr>
-        <tr><td>RDF4J</td><td>Java</td><td>MemoryStore SAIL</td><td>5.0.3</td></tr>
+        <tr><td>maplib</td><td>Python (Rust core)</td><td>Polars + Apache Arrow, in-memory</td><td>0.20.15</td><td>Apache 2.0</td></tr>
+        <tr><td>maplib (disk) *</td><td>Python (Rust core)</td><td>Polars + Apache Arrow, disk-backed storage</td><td>0.20.15</td><td>Proprietary</td></tr>
+        <tr><td>oxigraph</td><td>Python (Rust core)</td><td>SPOG indexes, disk-backed store (RocksDB)</td><td>0.5.7</td><td>MIT / Apache 2.0</td></tr>
+        <tr><td>rdflib</td><td>Python (pure)</td><td>In-memory dict-of-dicts</td><td>latest</td><td>BSD 3-Clause</td></tr>
+        <tr><td>Jena</td><td>Java</td><td>In-memory Model</td><td>5.2.0</td><td>Apache 2.0</td></tr>
+        <tr><td>RDF4J</td><td>Java</td><td>MemoryStore SAIL</td><td>5.0.3</td><td>EDL 1.0</td></tr>
+        <tr><td>QLever</td><td>C++ (Docker)</td><td>On-disk index + SPARQL endpoint</td><td>latest</td><td>Apache 2.0</td></tr>
+        <tr><td>Kolibrie</td><td>Rust</td><td>Dictionary-encoded BTreeSet + Streamertail optimizer</td><td>latest</td><td>Proprietary</td></tr>
+        <tr><td>Virtuoso</td><td>C (Docker)</td><td>Hybrid relational/RDF, column store</td><td>7.x (latest)</td><td>GPL v2</td></tr>
+        <tr><td>GraphDB</td><td>Java (Docker)</td><td>RDF4J-based triplestore, on-disk persistence</td><td>10.8.0</td><td>Proprietary (free tier)</td></tr>
+        <tr><td>dotNetRDF</td><td>C# (Docker)</td><td>In-memory TripleStore, Leviathan SPARQL engine</td><td>3.5.1</td><td>MIT</td></tr>
+        <tr><td>Neo4j + n10s</td><td>Java (Docker)</td><td>Native property graph with neosemantics RDF import</td><td>5.26 + n10s 5.26.0</td><td>GPL v3 (Community)</td></tr>
       </tbody>
     </table>
+    <p style="font-size:0.82rem;color:var(--stone-500);margin-top:0.8rem">
+      * maplib (disk) uses the <code>storage_folder</code> parameter for disk-backed storage. This feature is part of the proprietary maplib distribution and is not available in the open-source release. The in-memory maplib (without <code>storage_folder</code>) is fully open source under Apache 2.0.
+    </p>
   </div>
 </section>
 
@@ -650,8 +703,8 @@
       <p>233s to read Turtle, 63s for Q4. At 10M triples rdflib is 68x slower than maplib on reads and 1283x slower on aggregation queries. Pure Python with no native acceleration simply can't keep up.</p>
     </div>
     <div class="obs-card">
-      <h4>RDF4J surprises on queries at scale</h4>
-      <p>At 10M triples, RDF4J's Q3 (158ms) beats Jena (407ms) and oxigraph (386ms). Its MemoryStore SAIL indexing pays off on multi-pattern joins. On writes though, Jena remains significantly faster.</p>
+      <h4>QLever: built for SPARQL at scale</h4>
+      <p>QLever delivers the fastest SPARQL across the board at 10M triples: Q1 in 1.3ms, Q2 in 1.8ms, Q4 in 2.3ms. Its on-disk index means slower loading (7.8s for Turtle), but once indexed, query times barely grow with dataset size — Q1 actually gets faster from 1M to 10M.</p>
     </div>
   </div>
 </section>
@@ -662,12 +715,36 @@
   <p class="section-lead">All benchmarks use the same data files and the same SPARQL queries. 5-minute timeout per operation.</p>
   <div class="method-grid">
     <div class="method-item">
-      <h4>Python: maplib, oxigraph, rdflib</h4>
-      <p>time.perf_counter(), garbage collected between runs. Queries: best of 3 after warmup. maplib uses parallel=True for reads and streaming=True for queries.</p>
+      <h4>Python: maplib, maplib (disk), oxigraph, rdflib</h4>
+      <p>time.perf_counter(), garbage collected between runs. Queries: best of 3 after warmup. maplib uses parallel=True for reads and streaming=True for queries. maplib (disk) uses Model(storage_folder=...) for disk-backed storage instead of in-memory — same API, data persisted to local SSD. oxigraph uses pyoxigraph's Store() without a path argument (anonymous temporary store backed by RocksDB).</p>
     </div>
     <div class="method-item">
       <h4>Java: Jena, RDF4J</h4>
       <p>System.nanoTime(), JVM warmed up with a full medium-dataset read before timing. Queries: best of 3 after warmup.</p>
+    </div>
+    <div class="method-item">
+      <h4>Rust: Kolibrie</h4>
+      <p>Kolibrie (KU Leuven Stream Intelligence Lab) compiled natively on macOS. Dictionary-encoded BTreeSet storage with Streamertail volcano-style optimizer. std::time::Instant for timing. Queries: best of 3 after warmup.</p>
+    </div>
+    <div class="method-item">
+      <h4>C++: QLever (Docker)</h4>
+      <p>QLever via Docker (adfreiburg/qlever). Index building via qlever-index, queries via HTTP endpoint on qlever-server. Best of 3 after warmup. Write operations are N/A (query engine).</p>
+    </div>
+    <div class="method-item">
+      <h4>C: Virtuoso (Docker)</h4>
+      <p>Virtuoso Open-Source 7.x via Docker. Bulk loading via isql ld_dir() + rdf_loader_run(). SPARQL queries via HTTP endpoint. Best of 3 after warmup. Write operations are N/A (database server).</p>
+    </div>
+    <div class="method-item">
+      <h4>Java: GraphDB (Docker)</h4>
+      <p>Ontotext GraphDB 10.8.0 via Docker. Server-side import (files mounted at /root/graphdb-import). Repository with empty ruleset (no inference). SPARQL queries via HTTP endpoint. Best of 3 after warmup. Write operations are N/A (database server).</p>
+    </div>
+    <div class="method-item">
+      <h4>C#: dotNetRDF (Docker)</h4>
+      <p>dotNetRDF 3.5.1 on .NET 8 via Docker. In-memory TripleStore with TurtleParser/NTriplesParser for I/O and Leviathan SPARQL engine for queries. Best of 3 after warmup. 16 GB container memory limit. xlarge (10M) exceeds available memory (OOM).</p>
+    </div>
+    <div class="method-item">
+      <h4>Java: Neo4j + neosemantics (Docker)</h4>
+      <p>Neo4j 5.26 Community Edition + neosemantics (n10s) 5.26.0 via Docker. RDF imported via <code>n10s.rdf.import.fetch()</code> into Neo4j's labeled property graph. SPARQL queries translated to equivalent Cypher. Best of 3 after warmup. Write operations are N/A (database server). Note: Neo4j is a property graph database — n10s maps RDF triples to its native model, so import times include the RDF-to-property-graph conversion.</p>
     </div>
     <div class="method-item">
       <h4>I/O operations</h4>
@@ -675,10 +752,11 @@
     </div>
     <div class="method-item">
       <h4>Machine</h4>
-      <p>Apple M3 Max, 36 GB RAM, macOS. maplib, Jena, RDF4J on native macOS. oxigraph and rdflib on Linux aarch64 VM (different hardware, so cross-machine comparisons are directionally correct).</p>
+      <p>Apple M3 Max, 36 GB RAM, macOS. maplib, maplib (disk), Jena, RDF4J, Kolibrie on native macOS. oxigraph and rdflib on Linux aarch64 VM. QLever, Virtuoso, GraphDB, Neo4j, and dotNetRDF via Docker. Server-based frameworks (QLever, Virtuoso, GraphDB, Neo4j) have query times that include HTTP round-trip overhead of ~0.5–1 ms; dotNetRDF runs in-process inside the container with no network overhead.</p>
     </div>
   </div>
 </section>
+
 
 </div>
 
@@ -761,23 +839,139 @@ const DATA = {
       read_turtle: 24.9454, write_turtle: 18.1935, read_ntriples: 15.2584, write_ntriples: 13.2529,
       q1: 0.9075, q2: 0.8456, q3: 0.1584, q4: 1.1279
     }
+  },
+  qlever: {
+    medium: {
+      read_turtle: 0.63324, write_turtle: null, read_ntriples: 0.46051, write_ntriples: null,
+      q1: 0.00204, q2: 0.00677, q3: 0.01345, q4: 0.00852
+    },
+    large: {
+      read_turtle: 1.21562, write_turtle: null, read_ntriples: 0.96808, write_ntriples: null,
+      q1: 0.00144, q2: 0.00279, q3: 0.00575, q4: 0.00410
+    },
+    xlarge: {
+      read_turtle: 7.82915, write_turtle: null, read_ntriples: 7.65021, write_ntriples: null,
+      q1: 0.00134, q2: 0.00184, q3: 0.00436, q4: 0.00234
+    }
+  },
+  kolibrie: {
+    // I/O results are fully comparable. Only Q3 is shown for SPARQL (identical
+    // query, just expanded IRIs). Q1/Q2/Q4 use simplified queries because
+    // Kolibrie's parser does not yet support PREFIX, inline aggregates
+    // (COUNT/SUM in SELECT), or OPTIONAL — so those are not comparable.
+    medium: {
+      read_turtle: 0.08136, write_turtle: 0.06382, read_ntriples: 0.09607, write_ntriples: 0.06824,
+      q1: null, q2: null, q3: 0.00098, q4: null
+    },
+    large: {
+      read_turtle: 0.70335, write_turtle: 0.65988, read_ntriples: 1.22147, write_ntriples: 0.71415,
+      q1: null, q2: null, q3: 0.01215, q4: null
+    },
+    xlarge: {
+      read_turtle: 7.51200, write_turtle: 7.30030, read_ntriples: 16.19908, write_ntriples: 7.88725,
+      q1: null, q2: null, q3: 0.14906, q4: null
+    }
+  },
+  virtuoso: {
+    medium: {
+      read_turtle: 0.62179, write_turtle: null, read_ntriples: 0.95444, write_ntriples: null,
+      q1: 0.00146, q2: 0.00251, q3: 0.00219, q4: 0.01609
+    },
+    large: {
+      read_turtle: 2.03144, write_turtle: null, read_ntriples: 6.86610, write_ntriples: null,
+      q1: 0.00539, q2: 0.01960, q3: 0.00710, q4: 0.20195
+    },
+    xlarge: {
+      read_turtle: 14.77093, write_turtle: null, read_ntriples: 78.62517, write_ntriples: null,
+      q1: 0.04343, q2: 0.03138, q3: 0.10188, q4: 1.56934
+    }
+  },
+  maplib_disk: {
+    medium: {
+      read_turtle: 0.32400, write_turtle: 0.09222, read_ntriples: 0.31961, write_ntriples: 0.09894,
+      q1: 0.06196, q2: 0.00560, q3: 0.01852, q4: 0.01562
+    },
+    large: {
+      read_turtle: 1.35191, write_turtle: 0.29641, read_ntriples: 1.32993, write_ntriples: 0.27288,
+      q1: 0.06818, q2: 0.00802, q3: 0.02366, q4: 0.01955
+    },
+    xlarge: {
+      read_turtle: 13.22102, write_turtle: 2.94555, read_ntriples: 13.78709, write_ntriples: 1.91371,
+      q1: 0.16337, q2: 0.02280, q3: 0.05995, q4: 0.06451
+    }
+  },
+  graphdb: {
+    medium: {
+      read_turtle: 4.17868, write_turtle: null, read_ntriples: 3.68389, write_ntriples: null,
+      q1: 0.02068, q2: 0.03023, q3: 0.01152, q4: 0.03093
+    },
+    large: {
+      read_turtle: 7.68059, write_turtle: null, read_ntriples: 6.63591, write_ntriples: null,
+      q1: 0.15320, q2: 0.20811, q3: 0.04481, q4: 0.23088
+    },
+    xlarge: {
+      read_turtle: 60.14669, write_turtle: null, read_ntriples: 52.31842, write_ntriples: null,
+      q1: 1.52227, q2: 2.60670, q3: 0.55888, q4: 3.24576
+    }
+  },
+  dotnetrdf: {
+    medium: {
+      read_turtle: 1.4713, write_turtle: 0.2867, read_ntriples: 0.8449, write_ntriples: 0.4168,
+      q1: 0.0675, q2: 0.0778, q3: 0.0344, q4: 0.0895
+    },
+    large: {
+      read_turtle: 9.5394, write_turtle: 2.4623, read_ntriples: 9.1712, write_ntriples: 1.7481,
+      q1: 0.6097, q2: 0.7542, q3: 0.4163, q4: 0.8892
+    },
+    xlarge: {
+      read_turtle: null, write_turtle: null, read_ntriples: null, write_ntriples: null,
+      q1: null, q2: null, q3: null, q4: null
+    }
+  },
+  neo4j: {
+    medium: {
+      read_turtle: 1.24275, write_turtle: null, read_ntriples: 0.51932, write_ntriples: null,
+      q1: 0.00408, q2: 0.01792, q3: 0.01255, q4: 0.01143
+    },
+    large: {
+      read_turtle: 6.55781, write_turtle: null, read_ntriples: 5.26040, write_ntriples: null,
+      q1: 0.00419, q2: 0.09380, q3: 0.06081, q4: 0.08571
+    },
+    xlarge: {
+      read_turtle: 65.06503, write_turtle: null, read_ntriples: 49.89045, write_ntriples: null,
+      q1: 0.00412, q2: 1.01184, q3: 0.67351, q4: 1.41113
+    }
   }
 };
 
-const FW_ORDER = ['maplib', 'oxigraph', 'rdflib', 'jena', 'rdf4j'];
+const FW_ORDER = ['maplib', 'maplib_disk', 'oxigraph', 'rdflib', 'jena', 'rdf4j', 'qlever', 'kolibrie', 'virtuoso', 'graphdb', 'dotnetrdf', 'neo4j'];
 const FW_COLORS = {
-  maplib:   '#2d6a4f',
-  oxigraph: '#3b82f6',
-  rdflib:   '#a3a3a3',
-  jena:     '#e85d3a',
-  rdf4j:    '#eab308',
+  maplib:      '#2d6a4f',
+  maplib_disk: '#52796f',
+  graphdb:     '#ff6f00',
+  oxigraph:    '#3b82f6',
+  rdflib:    '#a3a3a3',
+  jena:      '#e85d3a',
+  rdf4j:     '#eab308',
+  qlever:    '#9333ea',
+  kolibrie:  '#f472b6',
+  virtuoso:  '#06b6d4',
+  dotnetrdf: '#8b5cf6',
+  neo4j:     '#018bff',
 };
 const FW_LABELS = {
   maplib: 'maplib',
+  maplib_disk: 'maplib (disk)',
+  graphdb: 'GraphDB',
   oxigraph: 'oxigraph',
   rdflib: 'rdflib',
   jena: 'Jena',
   rdf4j: 'RDF4J',
+  qlever: 'QLever',
+  kolibrie: 'Kolibrie',
+  virtuoso: 'Virtuoso',
+  dotnetrdf: 'dotNetRDF',
+  neo4j:     'Neo4j + n10s',
 };
 
 // ── State ──
@@ -827,7 +1021,54 @@ function toggleFW(chip) {
     visibleFW.add(fw);
   }
   syncFilterChips();
+  syncPresetButtons();
   rebuildAll();
+}
+
+// ── Preset groups ──
+const PRESETS = {
+  all:    FW_ORDER,
+  memory: ['maplib', 'rdflib', 'jena', 'rdf4j', 'kolibrie', 'dotnetrdf'],
+  disk:   ['maplib_disk', 'oxigraph', 'qlever', 'virtuoso', 'graphdb', 'neo4j'],
+  python: ['maplib', 'maplib_disk', 'oxigraph', 'rdflib'],
+  docker: ['qlever', 'virtuoso', 'graphdb', 'dotnetrdf', 'neo4j'],
+};
+
+function applyPreset(name) {
+  const fws = PRESETS[name];
+  if (!fws) return;
+  visibleFW.clear();
+  fws.forEach(fw => visibleFW.add(fw));
+  syncFilterChips();
+  // Update preset button styling
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase().replace(/[\s\/\-]+/g, '').includes(name) ||
+      (name === 'all' && btn.textContent === 'All') ||
+      (name === 'memory' && btn.textContent === 'In-memory') ||
+      (name === 'disk' && btn.textContent === 'Disk / server') ||
+      (name === 'python' && btn.textContent === 'Python') ||
+      (name === 'docker' && btn.textContent === 'Docker-based'));
+  });
+  rebuildAll();
+}
+
+function syncPresetButtons() {
+  // Check if current selection matches any preset exactly
+  document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+  for (const [name, fws] of Object.entries(PRESETS)) {
+    if (fws.length === visibleFW.size && fws.every(fw => visibleFW.has(fw))) {
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        if ((name === 'all' && btn.textContent === 'All') ||
+            (name === 'memory' && btn.textContent === 'In-memory') ||
+            (name === 'disk' && btn.textContent === 'Disk / server') ||
+            (name === 'python' && btn.textContent === 'Python') ||
+            (name === 'docker' && btn.textContent === 'Docker-based')) {
+          btn.classList.add('active');
+        }
+      });
+      return;
+    }
+  }
 }
 
 function rebuildAll() {

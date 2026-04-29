@@ -157,7 +157,7 @@ WHERE {
            :totalAmount ?amount ;
            :orderStatus ?status .
     ?customer rdfs:label ?customer_name ;
-              :country "Norway" .
+              :country :Norway .
     ?product rdfs:label ?product_name .
 }
 ORDER BY DESC(?amount)
