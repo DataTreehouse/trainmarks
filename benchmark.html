@@ -316,33 +316,6 @@
   .query-code-wrap .uri { color: #74c69d; }
   .query-code-wrap .lit { color: #d4a373; }
 
-  /* ── Observation cards ── */
-  .obs-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-  @media (max-width: 768px) {
-    .obs-grid { grid-template-columns: 1fr; }
-  }
-  .obs-card {
-    background: var(--forest-50);
-    border-left: 3px solid var(--forest-400);
-    border-radius: 0 8px 8px 0;
-    padding: 1.2rem 1.4rem;
-  }
-  .obs-card h4 {
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--forest-800);
-    margin-bottom: 0.3rem;
-  }
-  .obs-card p {
-    font-size: 0.84rem;
-    color: var(--stone-700);
-    line-height: 1.55;
-  }
-
   /* ── Framework info table ── */
   .fw-table {
     margin-top: 1rem;
@@ -351,33 +324,6 @@
     font-weight: 600;
     color: var(--forest-800);
     white-space: nowrap;
-  }
-
-  /* ── Methodology ── */
-  .method-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-  @media (max-width: 768px) {
-    .method-grid { grid-template-columns: 1fr; }
-  }
-  .method-item {
-    background: var(--white);
-    border: 1px solid var(--stone-200);
-    border-radius: 8px;
-    padding: 1.2rem;
-  }
-  .method-item h4 {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--forest-700);
-    margin-bottom: 0.3rem;
-  }
-  .method-item p {
-    font-size: 0.82rem;
-    color: var(--stone-500);
-    line-height: 1.5;
   }
 
   /* ── Footer ── */
@@ -684,79 +630,6 @@
     </div>
   </div>
 </section>
-
-<!-- ════════════ KEY OBSERVATIONS ════════════ -->
-<section>
-  <h2>Key Observations</h2>
-  <p class="section-lead">Patterns that emerged from the benchmark results.</p>
-  <div class="obs-grid">
-    <div class="obs-card">
-      <h4>maplib dominates across the board</h4>
-      <p>With parallel reads and streaming queries, maplib leads on every operation at every scale. At 10M triples: Turtle read in 3.4s (Jena: 19s, RDF4J: 25s), Q2 aggregation in 20ms, that is 43x faster than RDF4J and 2268x faster than rdflib.</p>
-    </div>
-    <div class="obs-card">
-      <h4>The gap widens at scale</h4>
-      <p>maplib's advantage grows with dataset size. Q2 speedup vs RDF4J: 6x at 100K, 16x at 1M, 43x at 10M. The columnar engine (Polars/Arrow) shines on aggregation-heavy queries where row-oriented stores struggle.</p>
-    </div>
-    <div class="obs-card">
-      <h4>rdflib hits a wall at 10M</h4>
-      <p>233s to read Turtle, 63s for Q4. At 10M triples rdflib is 68x slower than maplib on reads and 1283x slower on aggregation queries. Pure Python with no native acceleration simply can't keep up.</p>
-    </div>
-    <div class="obs-card">
-      <h4>QLever: built for SPARQL at scale</h4>
-      <p>QLever delivers the fastest SPARQL across the board at 10M triples: Q1 in 1.3ms, Q2 in 1.8ms, Q4 in 2.3ms. Its on-disk index means slower loading (7.8s for Turtle), but once indexed, query times barely grow with dataset size — Q1 actually gets faster from 1M to 10M.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════ METHODOLOGY ════════════ -->
-<section>
-  <h2>Methodology</h2>
-  <p class="section-lead">All benchmarks use the same data files and the same SPARQL queries. 5-minute timeout per operation.</p>
-  <div class="method-grid">
-    <div class="method-item">
-      <h4>Python: maplib, maplib (disk), oxigraph, rdflib</h4>
-      <p>time.perf_counter(), garbage collected between runs. Queries: best of 3 after warmup. maplib uses parallel=True for reads and streaming=True for queries. maplib (disk) uses Model(storage_folder=...) for disk-backed storage instead of in-memory — same API, data persisted to local SSD. oxigraph uses pyoxigraph's Store() without a path argument (anonymous temporary store backed by RocksDB).</p>
-    </div>
-    <div class="method-item">
-      <h4>Java: Jena, RDF4J</h4>
-      <p>System.nanoTime(), JVM warmed up with a full medium-dataset read before timing. Queries: best of 3 after warmup.</p>
-    </div>
-    <div class="method-item">
-      <h4>Rust: Kolibrie</h4>
-      <p>Kolibrie (KU Leuven Stream Intelligence Lab) compiled natively on macOS. Dictionary-encoded BTreeSet storage with Streamertail volcano-style optimizer. std::time::Instant for timing. Queries: best of 3 after warmup.</p>
-    </div>
-    <div class="method-item">
-      <h4>C++: QLever (Docker)</h4>
-      <p>QLever via Docker (adfreiburg/qlever). Index building via qlever-index, queries via HTTP endpoint on qlever-server. Best of 3 after warmup. Write operations are N/A (query engine).</p>
-    </div>
-    <div class="method-item">
-      <h4>C: Virtuoso (Docker)</h4>
-      <p>Virtuoso Open-Source 7.x via Docker. Bulk loading via isql ld_dir() + rdf_loader_run(). SPARQL queries via HTTP endpoint. Best of 3 after warmup. Write operations are N/A (database server).</p>
-    </div>
-    <div class="method-item">
-      <h4>Java: GraphDB (Docker)</h4>
-      <p>Ontotext GraphDB 10.8.0 via Docker. Server-side import (files mounted at /root/graphdb-import). Repository with empty ruleset (no inference). SPARQL queries via HTTP endpoint. Best of 3 after warmup. Write operations are N/A (database server).</p>
-    </div>
-    <div class="method-item">
-      <h4>C#: dotNetRDF (Docker)</h4>
-      <p>dotNetRDF 3.5.1 on .NET 8 via Docker. In-memory TripleStore with TurtleParser/NTriplesParser for I/O and Leviathan SPARQL engine for queries. Best of 3 after warmup. 16 GB container memory limit. xlarge (10M) exceeds available memory (OOM).</p>
-    </div>
-    <div class="method-item">
-      <h4>Java: Neo4j + neosemantics (Docker)</h4>
-      <p>Neo4j 5.26 Community Edition + neosemantics (n10s) 5.26.0 via Docker. RDF imported via <code>n10s.rdf.import.fetch()</code> into Neo4j's labeled property graph. SPARQL queries translated to equivalent Cypher. Best of 3 after warmup. Write operations are N/A (database server). Note: Neo4j is a property graph database — n10s maps RDF triples to its native model, so import times include the RDF-to-property-graph conversion.</p>
-    </div>
-    <div class="method-item">
-      <h4>I/O operations</h4>
-      <p>Single timed run (no averaging) since they include allocation overhead that is part of the real-world cost.</p>
-    </div>
-    <div class="method-item">
-      <h4>Machine</h4>
-      <p>Apple M3 Max, 36 GB RAM, macOS. maplib, maplib (disk), Jena, RDF4J, Kolibrie on native macOS. oxigraph and rdflib on Linux aarch64 VM. QLever, Virtuoso, GraphDB, Neo4j, and dotNetRDF via Docker. Server-based frameworks (QLever, Virtuoso, GraphDB, Neo4j) have query times that include HTTP round-trip overhead of ~0.5–1 ms; dotNetRDF runs in-process inside the container with no network overhead.</p>
-    </div>
-  </div>
-</section>
-
 
 </div>
 
