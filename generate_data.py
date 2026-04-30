@@ -1,6 +1,6 @@
 """
 Generate synthetic RDF benchmark data in Turtle and N-Triples format.
-Two scales: medium (100K triples) and large (1M triples).
+Three scales: medium (100K triples), large (1M triples), and xlarge (10M triples).
 
 Domain: e-commerce — customers, orders, products (same domain as the maplib masterclass).
 """
@@ -44,8 +44,8 @@ def generate_triples(n_customers, n_products, n_orders):
         triples.append((cid, "rdf:type", ":Customer"))
         triples.append((cid, "rdfs:label", f'"{name}"'))
         triples.append((cid, ":email", f'"{name.lower().replace(" ", ".")}@example.com"'))
-        triples.append((cid, ":country", f'"{random.choice(COUNTRIES)}"'))
-        triples.append((cid, ":segment", f'"{random.choice(SEGMENTS)}"'))
+        triples.append((cid, ":country", f':{random.choice(COUNTRIES)}'))
+        triples.append((cid, ":segment", f':{random.choice(SEGMENTS)}'))
         triples.append((cid, ":signupDate", f'"{2020 + random.randint(0,5)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}"^^xsd:date'))
 
     # Products
@@ -85,44 +85,46 @@ def write_turtle(triples, filepath):
             f.write(f"{s} {p} {o} .\n")
 
 
-def write_ntriples(triples, filepath):
-    """Write triples as N-Triples (full IRIs, no prefixes)."""
-    ns = "http://benchmark.example/"
-    rdf_ns = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    rdfs_ns = "http://www.w3.org/2000/01/rdf-schema#"
-    xsd_ns = "http://www.w3.org/2001/XMLSchema#"
-    skos_ns = "http://www.w3.org/2004/02/skos/core#"
+# ── N-Triples expansion ──
+NS = "http://benchmark.example/"
+RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+RDFS_NS = "http://www.w3.org/2000/01/rdf-schema#"
+XSD_NS = "http://www.w3.org/2001/XMLSchema#"
+SKOS_NS = "http://www.w3.org/2004/02/skos/core#"
+PREFIX_MAP = [
+    ("rdfs:", RDFS_NS),
+    ("rdf:", RDF_NS),
+    ("xsd:", XSD_NS),
+    ("skos:", SKOS_NS),
+    (":", NS),
+]
 
-    def expand(term):
-        if term.startswith('"'):
-            return term.replace("^^xsd:", f"^^<{xsd_ns}")  + (">" if "^^xsd:" in term.replace("^^xsd:", "") or "^^<" in term else "")
-        # Fix: handle typed literals properly
+def expand(term):
+    if term.startswith('"'):
         if "^^xsd:" in term:
             val, dtype = term.rsplit("^^xsd:", 1)
-            return f'{val}^^<{xsd_ns}{dtype}>'
-        prefixes = {
-            ":": ns,
-            "rdf:": rdf_ns,
-            "rdfs:": rdfs_ns,
-            "xsd:": xsd_ns,
-            "skos:": skos_ns,
-        }
-        for prefix, full in sorted(prefixes.items(), key=lambda x: -len(x[0])):
-            if term.startswith(prefix):
-                return f"<{full}{term[len(prefix):]}>"
+            return f'{val}^^<{XSD_NS}{dtype}>'
         return term
+    for prefix, full in PREFIX_MAP:
+        if term.startswith(prefix):
+            return f"<{full}{term[len(prefix):]}>"
+    return term
 
+def expand_object(o):
+    if o.startswith('"') and "^^xsd:" in o:
+        val_part, type_part = o.rsplit("^^xsd:", 1)
+        return f'{val_part}^^<{XSD_NS}{type_part}>'
+    elif o.startswith('"'):
+        return o
+    else:
+        return expand(o)
+
+
+def write_ntriples(triples, filepath):
+    """Write triples as N-Triples (full IRIs, no prefixes)."""
     with open(filepath, "w") as f:
         for s, p, o in triples:
-            # Handle typed literals in object
-            if o.startswith('"') and "^^xsd:" in o:
-                val_part, type_part = o.rsplit("^^xsd:", 1)
-                o_expanded = f'{val_part}^^<{xsd_ns}{type_part}>'
-            elif o.startswith('"'):
-                o_expanded = o
-            else:
-                o_expanded = expand(o)
-            f.write(f"{expand(s)} {expand(p)} {o_expanded} .\n")
+            f.write(f"{expand(s)} {expand(p)} {expand_object(o)} .\n")
 
 
 def generate_sparql_queries():

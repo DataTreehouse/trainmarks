@@ -32,7 +32,7 @@ QUERIES_DIR = os.path.join(os.path.dirname(__file__), "..", "queries")
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "..", "results")
 RESULTS = []
-TIMEOUT = 300  # 5 minutes default
+TIMEOUT = 600  # 10 minutes default
 LOAD_TIMEOUT = 600  # 10 minutes for large imports
 
 NEO4J_IMAGE = "neo4j:5.26-community"

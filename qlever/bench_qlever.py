@@ -32,7 +32,7 @@ import urllib.error
 QUERIES_DIR = os.path.join(os.path.dirname(__file__), "..", "queries")
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 RESULTS = []
-TIMEOUT = 300  # 5 minutes default
+TIMEOUT = 600  # 10 minutes default
 INDEX_TIMEOUT = 600  # 10 minutes for index building (xlarge)
 
 QLEVER_IMAGE = "adfreiburg/qlever"

@@ -19,7 +19,7 @@ QUERIES_DIR = os.path.join(os.path.dirname(__file__), "..", "queries")
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 STORAGE_DIR = os.path.join(os.path.dirname(__file__), "maplib-storage")
 RESULTS = []
-TIMEOUT = 300  # 5 minutes
+TIMEOUT = 600  # 10 minutes
 
 
 class TimeoutError(Exception):
@@ -89,7 +89,7 @@ def bench_io(scale, ttl_path, nt_path):
 
     # --- Write Turtle ---
     out_ttl = os.path.join(DATA_DIR, f"{scale}_maplib_disk_out.ttl")
-    _, t_write_ttl = timed("Write Turtle", lambda: m.write(out_ttl))
+    _, t_write_ttl = timed("Write Turtle", lambda: m.write(out_ttl, format="turtle"))
     if t_write_ttl is not None:
         RESULTS.append({"framework": "maplib_disk", "scale": scale, "operation": "write_turtle", "seconds": t_write_ttl})
         if os.path.exists(out_ttl):

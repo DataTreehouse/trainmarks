@@ -13,7 +13,7 @@ from maplib import Model
 
 QUERIES_DIR = os.path.join(os.path.dirname(__file__), "..", "queries")
 RESULTS = []
-TIMEOUT = 300  # 5 minutes
+TIMEOUT = 600  # 10 minutes
 
 
 class TimeoutError(Exception):
@@ -72,7 +72,7 @@ def bench_io(scale, ttl_path, nt_path):
 
     # --- Write Turtle ---
     out_ttl = f"../data/{scale}_maplib_out.ttl"
-    _, t_write_ttl = timed("Write Turtle", lambda: m.write(out_ttl))
+    _, t_write_ttl = timed("Write Turtle", lambda: m.write(out_ttl, format="turtle"))
     if t_write_ttl is not None:
         RESULTS.append({"framework": "maplib", "scale": scale, "operation": "write_turtle", "seconds": t_write_ttl})
         if os.path.exists(out_ttl):
@@ -150,6 +150,8 @@ if __name__ == "__main__":
     # XLarge
     m_xlarge = bench_io("xlarge", "../data/xlarge.ttl", "../data/xlarge.nt")
     bench_queries(m_xlarge, "xlarge")
+    del m_xlarge
+    gc.collect()
 
     # Save results
     with open("../results/results_maplib.json", "w") as f:

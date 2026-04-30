@@ -13,7 +13,7 @@ from rdflib import Graph
 
 QUERIES_DIR = os.path.join(os.path.dirname(__file__), "..", "queries")
 RESULTS = []
-TIMEOUT = 300  # 5 minutes
+TIMEOUT = 600  # 10 minutes
 
 
 class TimeoutError(Exception):
@@ -147,6 +147,8 @@ if __name__ == "__main__":
     # XLarge
     g_xlarge = bench_io("xlarge", "../data/xlarge.ttl", "../data/xlarge.nt")
     bench_queries(g_xlarge, "xlarge")
+    del g_xlarge
+    gc.collect()
 
     # Save results
     with open("../results/results_rdflib.json", "w") as f:

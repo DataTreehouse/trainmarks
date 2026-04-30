@@ -30,7 +30,7 @@ import urllib.error
 QUERIES_DIR = os.path.join(os.path.dirname(__file__), "..", "queries")
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 RESULTS = []
-TIMEOUT = 300  # 5 minutes default
+TIMEOUT = 600  # 10 minutes default
 LOAD_TIMEOUT = 600  # 10 minutes for large imports
 
 GRAPHDB_IMAGE = "ontotext/graphdb:10.8.0"
