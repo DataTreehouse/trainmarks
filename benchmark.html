@@ -34,7 +34,7 @@
     --fw-jena: #e85d3a;
     --fw-rdf4j: #eab308;
     --fw-qlever: #9333ea;
-    --fw-kolibrie: #f472b6;
+
     --fw-virtuoso: #06b6d4;
     --fw-maplib-disk: #52796f;
     --fw-graphdb: #ff6f00;
@@ -365,7 +365,7 @@
 <!-- ════════════ HERO ════════════ -->
 <header class="hero">
   <h1><strong>RDF Framework</strong> Benchmark</h1>
-  <p class="subtitle">Comparing twelve RDF frameworks and triplestores across I/O and SPARQL query performance at 100K, 1M, and 10M triples</p>
+  <p class="subtitle">Comparing eleven RDF frameworks and triplestores across I/O and SPARQL query performance at 100K, 1M, and 10M triples</p>
   <div class="meta-bar">
     <span>April 2026</span>
     <span>Apple M3 Max · 36 GB RAM</span>
@@ -392,7 +392,7 @@
 <!-- ════════════ FRAMEWORKS ════════════ -->
 <section>
   <h2>Frameworks</h2>
-  <p class="section-lead">Ten configurations spanning five languages and multiple execution models.</p>
+  <p class="section-lead">Eleven configurations spanning four languages and multiple execution models.</p>
   <div class="card">
     <table class="fw-table">
       <thead>
@@ -406,7 +406,7 @@
         <tr><td>Jena</td><td>Java</td><td>In-memory Model</td><td>5.2.0</td><td>Apache 2.0</td></tr>
         <tr><td>RDF4J</td><td>Java</td><td>MemoryStore SAIL</td><td>5.0.3</td><td>EDL 1.0</td></tr>
         <tr><td>QLever</td><td>C++ (Docker)</td><td>On-disk index + SPARQL endpoint</td><td>latest</td><td>Apache 2.0</td></tr>
-        <tr><td>Kolibrie</td><td>Rust</td><td>Dictionary-encoded BTreeSet + Streamertail optimizer</td><td>latest</td><td>Proprietary</td></tr>
+
         <tr><td>Virtuoso</td><td>C (Docker)</td><td>Hybrid relational/RDF, column store</td><td>7.x (latest)</td><td>GPL v2</td></tr>
         <tr><td>GraphDB</td><td>Java (Docker)</td><td>RDF4J-based triplestore, on-disk persistence</td><td>10.8.0</td><td>Proprietary (free tier)</td></tr>
         <tr><td>dotNetRDF</td><td>C# (Docker)</td><td>In-memory TripleStore, Leviathan SPARQL engine</td><td>3.5.1</td><td>MIT</td></tr>
@@ -727,24 +727,6 @@ const DATA = {
       q1: 0.00185, q2: 0.00217, q3: 0.00517, q4: 0.00228
     },
   },
-  kolibrie: {
-    // I/O results are fully comparable. Only Q3 is shown for SPARQL (identical
-    // query, just expanded IRIs). Q1/Q2/Q4 use simplified queries because
-    // Kolibrie's parser does not yet support PREFIX, inline aggregates
-    // (COUNT/SUM in SELECT), or OPTIONAL — so those are not comparable.
-    medium: {
-      read_turtle: 0.0455, write_turtle: 0.04548, read_ntriples: 0.08504, write_ntriples: 0.04397,
-      q1: 0.0008, q2: 0.00097, q3: 0.00105, q4: 0.00096
-    },
-    large: {
-      read_turtle: 0.47738, write_turtle: 0.48578, read_ntriples: 1.15555, write_ntriples: 0.45915,
-      q1: 0.00577, q2: 0.00687, q3: 0.00835, q4: 0.00793
-    },
-    xlarge: {
-      read_turtle: 5.282, write_turtle: 5.37971, read_ntriples: 16.56678, write_ntriples: 5.08457,
-      q1: 0.08866, q2: 0.11172, q3: 0.1603, q4: 0.14939
-    },
-  },
   virtuoso: {
     medium: {
       read_turtle: 0.58788, write_turtle: null, read_ntriples: 1.02711, write_ntriples: null,
@@ -817,7 +799,7 @@ const DATA = {
   }
 };
 
-const FW_ORDER = ['maplib', 'maplib_disk', 'oxigraph', 'rdflib', 'jena', 'rdf4j', 'qlever', 'kolibrie', 'virtuoso', 'graphdb', 'dotnetrdf', 'neo4j'];
+const FW_ORDER = ['maplib', 'maplib_disk', 'oxigraph', 'rdflib', 'jena', 'rdf4j', 'qlever', 'virtuoso', 'graphdb', 'dotnetrdf', 'neo4j'];
 const FW_COLORS = {
   maplib:      '#2d6a4f',
   maplib_disk: '#52796f',
@@ -827,7 +809,7 @@ const FW_COLORS = {
   jena:      '#e85d3a',
   rdf4j:     '#eab308',
   qlever:    '#9333ea',
-  kolibrie:  '#f472b6',
+
   virtuoso:  '#06b6d4',
   dotnetrdf: '#8b5cf6',
   neo4j:     '#018bff',
@@ -841,7 +823,7 @@ const FW_LABELS = {
   jena: 'Jena',
   rdf4j: 'RDF4J',
   qlever: 'QLever',
-  kolibrie: 'Kolibrie',
+
   virtuoso: 'Virtuoso',
   dotnetrdf: 'dotNetRDF',
   neo4j:     'Neo4j + n10s',
@@ -901,7 +883,7 @@ function toggleFW(chip) {
 // ── Preset groups ──
 const PRESETS = {
   all:    FW_ORDER,
-  memory: ['maplib', 'rdflib', 'jena', 'rdf4j', 'kolibrie', 'dotnetrdf'],
+  memory: ['maplib', 'rdflib', 'jena', 'rdf4j', 'dotnetrdf'],
   disk:   ['maplib_disk', 'oxigraph', 'qlever', 'virtuoso', 'graphdb', 'neo4j'],
   python: ['maplib', 'maplib_disk', 'oxigraph', 'rdflib'],
   docker: ['qlever', 'virtuoso', 'graphdb', 'dotnetrdf', 'neo4j'],

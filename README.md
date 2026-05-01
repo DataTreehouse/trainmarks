@@ -1,6 +1,6 @@
 # RDF Framework Benchmark
 
-A reproducible benchmark comparing twelve RDF frameworks and triplestores on I/O performance (read/write Turtle and N-Triples) and SPARQL query performance across three dataset scales (100K, 1M, and 10M triples).
+A reproducible benchmark comparing eleven RDF frameworks and triplestores on I/O performance (read/write Turtle and N-Triples) and SPARQL query performance across three dataset scales (100K, 1M, and 10M triples).
 
 **Results:** Open `benchmark.html` in a browser to view the interactive report with charts, framework filters, preset groups, and expandable query details.
 
@@ -15,7 +15,6 @@ A reproducible benchmark comparing twelve RDF frameworks and triplestores on I/O
 | Apache Jena | Java | In-memory Model | 5.2.0 | Apache 2.0 |
 | Eclipse RDF4J | Java | MemoryStore SAIL | 5.0.3 | EDL 1.0 |
 | QLever | C++ (Docker) | On-disk index + SPARQL endpoint | latest | Apache 2.0 |
-| Kolibrie | Rust | Dictionary-encoded BTreeSet | latest | Proprietary |
 | Virtuoso | C (Docker) | Hybrid relational/RDF, column store | 7.x | GPL v2 |
 | GraphDB | Java (Docker) | RDF4J-based, on-disk persistence | 10.8.0 | Proprietary (free tier) |
 | dotNetRDF | C# (Docker) | In-memory TripleStore | 3.5.1 | MIT |
@@ -30,10 +29,6 @@ A reproducible benchmark comparing twelve RDF frameworks and triplestores on I/O
 **Java frameworks (Jena, RDF4J):**
 - Java 11+
 - Maven 3.8+
-
-**Rust framework (Kolibrie):**
-- Rust toolchain (cargo)
-- Kolibrie crate (not public — requires access from KU Leuven)
 
 **Docker-based frameworks (QLever, Virtuoso, GraphDB, dotNetRDF, Neo4j):**
 - Docker Desktop installed and running
@@ -62,7 +57,6 @@ rdf-benchmark/
 ├── python-rdflib/         ← rdflib benchmark
 ├── java-jena/             ← Jena benchmark (Maven project)
 ├── java-rdf4j/            ← RDF4J benchmark (Maven project)
-├── rust-kolibrie/         ← Kolibrie benchmark (Cargo project)
 ├── qlever/                ← QLever benchmark (Docker)
 ├── virtuoso/              ← Virtuoso benchmark (Docker)
 ├── graphdb/               ← GraphDB benchmark (Docker)
@@ -117,14 +111,6 @@ java -jar target/rdf4j-benchmark-1.0-SNAPSHOT.jar ../data ../queries ../results
 cd ..
 ```
 
-### Rust framework
-
-```bash
-cd rust-kolibrie
-cargo run --release
-cd ..
-```
-
 ### Docker-based frameworks
 
 Each script handles pulling images, starting containers, and cleanup:
@@ -171,13 +157,13 @@ Neo4j uses equivalent Cypher translations of these queries rather than SPARQL.
 
 All frameworks use the same data files and the same queries. Each operation has a 5-minute timeout.
 
-**Timing:** Python uses `time.perf_counter()` with garbage collection between runs. Java uses `System.nanoTime()` with JVM warmup. Rust uses `std::time::Instant`. Docker-based frameworks time the full operation including any HTTP round-trip.
+**Timing:** Python uses `time.perf_counter()` with garbage collection between runs. Java uses `System.nanoTime()` with JVM warmup. Docker-based frameworks time the full operation including any HTTP round-trip.
 
 **Queries:** Best of 3 runs after a warmup run.
 
 **I/O:** Single timed run (no averaging), since allocation overhead is part of the real-world cost.
 
-**Write operations:** Native library frameworks (maplib, oxigraph, rdflib, Jena, RDF4J, Kolibrie, dotNetRDF) benchmark writing Turtle and N-Triples. Server-based frameworks (QLever, Virtuoso, GraphDB, Neo4j) record write operations as N/A since they are database servers that don't serialize RDF files.
+**Write operations:** Native library frameworks (maplib, oxigraph, rdflib, Jena, RDF4J, dotNetRDF) benchmark writing Turtle and N-Triples. Server-based frameworks (QLever, Virtuoso, GraphDB, Neo4j) record write operations as N/A since they are database servers that don't serialize RDF files.
 
 **oxigraph:** Uses `pyoxigraph.Store()` without a path argument, creating an anonymous temporary store backed by RocksDB.
 

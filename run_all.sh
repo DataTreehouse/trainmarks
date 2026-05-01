@@ -25,52 +25,44 @@ echo "=== RDF Benchmark Suite ==="
 echo "Root: $ROOT"
 
 # Python frameworks
-run_bench "1/12" "maplib" \
+run_bench "1/11" "maplib" \
     "cd '$ROOT/python-maplib' && python bench_maplib.py"
 
-run_bench "2/12" "maplib (disk)" \
+run_bench "2/11" "maplib (disk)" \
     "cd '$ROOT/python-maplib-disk' && python bench_maplib_disk.py"
 
-run_bench "3/12" "oxigraph" \
+run_bench "3/11" "oxigraph" \
     "cd '$ROOT/python-oxigraph' && python bench_oxigraph.py"
 
-run_bench "4/12" "rdflib (slow)" \
+run_bench "4/11" "rdflib (slow)" \
     "cd '$ROOT/python-rdflib' && python bench_rdflib.py"
 
 # Java frameworks
 if command -v mvn &> /dev/null; then
-    run_bench "5/12" "Apache Jena" \
+    run_bench "5/11" "Apache Jena" \
         "cd '$ROOT/java-jena' && mvn package -q -DskipTests 2>/dev/null && java -jar target/jena-benchmark-1.0-SNAPSHOT.jar ../data ../queries ../results"
 
-    run_bench "6/12" "Eclipse RDF4J" \
+    run_bench "6/11" "Eclipse RDF4J" \
         "cd '$ROOT/java-rdf4j' && mvn package -q -DskipTests 2>/dev/null && java -jar target/rdf4j-benchmark-1.0-SNAPSHOT.jar ../data ../queries ../results"
 else
     SKIPPED="$SKIPPED  - Jena, RDF4J (mvn not found)\n"
 fi
 
-# Rust framework
-if command -v cargo &> /dev/null; then
-    run_bench "7/12" "Kolibrie" \
-        "cd '$ROOT/rust-kolibrie' && cargo run --release"
-else
-    SKIPPED="$SKIPPED  - Kolibrie (cargo not found)\n"
-fi
-
 # Docker frameworks
 if command -v docker &> /dev/null; then
-    run_bench "8/12" "QLever (Docker)" \
+    run_bench "7/11" "QLever (Docker)" \
         "cd '$ROOT/qlever' && python bench_qlever.py"
 
-    run_bench "9/12" "Virtuoso (Docker)" \
+    run_bench "8/11" "Virtuoso (Docker)" \
         "cd '$ROOT/virtuoso' && python bench_virtuoso.py"
 
-    run_bench "10/12" "GraphDB (Docker)" \
+    run_bench "9/11" "GraphDB (Docker)" \
         "cd '$ROOT/graphdb' && python bench_graphdb.py"
 
-    run_bench "11/12" "dotNetRDF (Docker)" \
+    run_bench "10/11" "dotNetRDF (Docker)" \
         "cd '$ROOT/dotnetrdf' && python bench_dotnetrdf.py"
 
-    run_bench "12/12" "Neo4j + n10s (Docker)" \
+    run_bench "11/11" "Neo4j + n10s (Docker)" \
         "cd '$ROOT/neo4j' && python bench_neo4j.py"
 else
     SKIPPED="$SKIPPED  - QLever, Virtuoso, GraphDB, dotNetRDF, Neo4j (docker not found)\n"
