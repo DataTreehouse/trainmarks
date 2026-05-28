@@ -48,11 +48,16 @@ else
     SKIPPED="$SKIPPED  - Jena, RDF4J (mvn not found)\n"
 fi
 
+# QLever (native binary)
+if command -v qlever-index &> /dev/null; then
+    run_bench "7/13" "QLever (native)" \
+        "cd '$ROOT/qlever' && python3 bench_qlever.py"
+else
+    SKIPPED="$SKIPPED  - QLever (qlever-index not found; brew install qlever)\n"
+fi
+
 # Docker frameworks
 if command -v docker &> /dev/null; then
-    run_bench "7/13" "QLever (Docker)" \
-        "cd '$ROOT/qlever' && python3 bench_qlever.py"
-
     run_bench "8/13" "Virtuoso (Docker)" \
         "cd '$ROOT/virtuoso' && python3 bench_virtuoso.py"
 
@@ -68,7 +73,7 @@ if command -v docker &> /dev/null; then
     run_bench "12/13" "Blazegraph (Docker)" \
         "cd '$ROOT/blazegraph' && python3 bench_blazegraph.py"
 else
-    SKIPPED="$SKIPPED  - QLever, Virtuoso, GraphDB, dotNetRDF, Neo4j, Blazegraph (docker not found)\n"
+    SKIPPED="$SKIPPED  - Virtuoso, GraphDB, dotNetRDF, Neo4j, Blazegraph (docker not found)\n"
 fi
 
 # Node.js frameworks
