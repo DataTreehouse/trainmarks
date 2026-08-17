@@ -10,14 +10,14 @@ A reproducible benchmark comparing thirteen RDF frameworks and triplestores on I
 |-----------|----------|------------|---------|---------|
 | maplib | Python (Rust core) | In-memory (Polars + Arrow) | 0.20.15 | Apache 2.0 |
 | maplib (disk) | Python (Rust core) | Disk-backed (Polars + Arrow) | 0.20.15 | Proprietary |
-| oxigraph | Python (Rust core) | Disk-backed (RocksDB) | 0.5.7 | MIT / Apache 2.0 |
-| rdflib | Python (pure) | In-memory (dict-of-dicts) | latest | BSD 3-Clause |
-| Apache Jena | Java | In-memory Model | 5.2.0 | Apache 2.0 |
-| Eclipse RDF4J | Java | MemoryStore SAIL | 5.0.3 | EDL 1.0 |
+| oxigraph | Python (Rust core) | Disk-backed (RocksDB) | 0.5.9 | MIT / Apache 2.0 |
+| rdflib | Python (pure) | In-memory (dict-of-dicts) | 7.6.0 | BSD 3-Clause |
+| Apache Jena | Java | In-memory Model | 6.1.0 | Apache 2.0 |
+| Eclipse RDF4J | Java | MemoryStore SAIL | 6.0.0 | EDL 1.0 |
 | QLever | C++ (Docker) | On-disk index + SPARQL endpoint | latest | Apache 2.0 |
-| Virtuoso | C (Docker) | Hybrid relational/RDF, column store | 7.x | GPL v2 |
+| Virtuoso | C (Docker) | Hybrid relational/RDF, column store | 7.2.17 | GPL v2 |
 | GraphDB | Java (Docker) | RDF4J-based, on-disk persistence | 10.8.0 | Proprietary (free tier) |
-| dotNetRDF | C# (Docker) | In-memory TripleStore | 3.5.1 | MIT |
+| dotNetRDF | C# (Docker) | In-memory TripleStore | 3.5.2 | MIT |
 | Neo4j + n10s | Java (Docker) | Native property graph + RDF import | 5.26 + n10s 5.26.0 | GPL v3 (Community) |
 | Blazegraph | Java (Docker) | In-memory / RWStore journal | 2.1.5 | GPL v2 |
 | Comunica | TypeScript (Node.js) | Client-side query engine over files | latest | MIT |
@@ -38,9 +38,9 @@ A reproducible benchmark comparing thirteen RDF frameworks and triplestores on I
   ```bash
   docker pull adfreiburg/qlever
   docker pull openlink/virtuoso-opensource-7:latest
-  docker pull ontotext/graphdb:10.8.0
+  docker pull ontotext/graphdb:11.4.3
   docker pull mcr.microsoft.com/dotnet/sdk:8.0
-  docker pull neo4j:5.26-community
+  docker pull neo4j:2025.06-community
   docker pull lyrasis/blazegraph:2.1.5
   ```
 

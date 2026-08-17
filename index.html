@@ -403,17 +403,17 @@
         <tr><th>Framework</th><th>Language</th><th>Engine</th><th>Version</th><th>License</th></tr>
       </thead>
       <tbody>
-        <tr><td>maplib</td><td>Python (Rust core)</td><td>Polars + Apache Arrow, in-memory</td><td>0.20.15</td><td>Apache 2.0</td></tr>
-        <tr><td>maplib (disk) *</td><td>Python (Rust core)</td><td>Polars + Apache Arrow, disk-backed storage</td><td>0.20.15</td><td>Proprietary</td></tr>
-        <tr><td>oxigraph</td><td>Python (Rust core)</td><td>SPOG indexes, disk-backed store (RocksDB)</td><td>0.5.7</td><td>MIT / Apache 2.0</td></tr>
-        <tr><td>rdflib</td><td>Python (pure)</td><td>In-memory dict-of-dicts</td><td>latest</td><td>BSD 3-Clause</td></tr>
-        <tr><td>Jena</td><td>Java</td><td>In-memory Model</td><td>5.2.0</td><td>Apache 2.0</td></tr>
-        <tr><td>RDF4J</td><td>Java</td><td>MemoryStore SAIL</td><td>5.0.3</td><td>EDL 1.0</td></tr>
+        <tr><td>maplib</td><td>Python (Rust core)</td><td>Polars + Apache Arrow, in-memory</td><td>0.20.25</td><td>Apache 2.0</td></tr>
+        <tr><td>maplib (disk) *</td><td>Python (Rust core)</td><td>Polars + Apache Arrow, disk-backed storage</td><td>0.20.25</td><td>Proprietary</td></tr>
+        <tr><td>oxigraph</td><td>Python (Rust core)</td><td>SPOG indexes, disk-backed store (RocksDB)</td><td>0.5.9</td><td>MIT / Apache 2.0</td></tr>
+        <tr><td>rdflib</td><td>Python (pure)</td><td>In-memory dict-of-dicts</td><td>7.6.0</td><td>BSD 3-Clause</td></tr>
+        <tr><td>Jena</td><td>Java</td><td>In-memory Model</td><td>6.1.0</td><td>Apache 2.0</td></tr>
+        <tr><td>RDF4J</td><td>Java</td><td>MemoryStore SAIL</td><td>6.0.0</td><td>EDL 1.0</td></tr>
         <tr><td>QLever</td><td>C++ (Docker)</td><td>On-disk index + SPARQL endpoint</td><td>latest</td><td>Apache 2.0</td></tr>
 
-        <tr><td>Virtuoso</td><td>C (Docker)</td><td>Hybrid relational/RDF, column store</td><td>7.x (latest)</td><td>GPL v2</td></tr>
+        <tr><td>Virtuoso</td><td>C (Docker)</td><td>Hybrid relational/RDF, column store</td><td>7.2.17</td><td>GPL v2</td></tr>
         <tr><td>GraphDB</td><td>Java (Docker)</td><td>RDF4J-based triplestore, on-disk persistence</td><td>10.8.0</td><td>Proprietary (free tier)</td></tr>
-        <tr><td>dotNetRDF</td><td>C# (Docker)</td><td>In-memory TripleStore, Leviathan SPARQL engine</td><td>3.5.1</td><td>MIT</td></tr>
+        <tr><td>dotNetRDF</td><td>C# (Docker)</td><td>In-memory TripleStore, Leviathan SPARQL engine</td><td>3.5.2</td><td>MIT</td></tr>
         <tr><td>Neo4j + n10s</td><td>Java (Docker)</td><td>Native property graph with neosemantics RDF import</td><td>5.26 + n10s 5.26.0</td><td>GPL v3 (Community)</td></tr>
       </tbody>
     </table>
@@ -595,8 +595,8 @@
   <p class="section-lead">Time to read and write RDF data in Turtle and N-Triples format.</p>
 
   <div class="scale-tabs" id="io-tabs">
-    <button class="scale-tab active" onclick="switchIO('medium')">Medium · 100K</button>
-    <button class="scale-tab" onclick="switchIO('large')">Large · 1M</button>
+    <button class="scale-tab" onclick="switchIO('medium')">Medium · 100K</button>
+    <button class="scale-tab active" onclick="switchIO('large')">Large · 1M</button>
     <button class="scale-tab" onclick="switchIO('xlarge')">XLarge · 10M</button>
   </div>
 
@@ -638,8 +638,8 @@
   <p class="section-lead">Best of 3 runs after warmup. All frameworks execute the same SPARQL queries.</p>
 
   <div class="scale-tabs" id="query-tabs">
-    <button class="scale-tab active" onclick="switchQuery('medium')">Medium · 100K</button>
-    <button class="scale-tab" onclick="switchQuery('large')">Large · 1M</button>
+    <button class="scale-tab" onclick="switchQuery('medium')">Medium · 100K</button>
+    <button class="scale-tab active" onclick="switchQuery('large')">Large · 1M</button>
     <button class="scale-tab" onclick="switchQuery('xlarge')">XLarge · 10M</button>
   </div>
 
@@ -717,87 +717,87 @@
 const DATA = {
   maplib: {
     medium: {
-      read_turtle: 0.13945, write_turtle: 0.11176, read_ntriples: 0.07647, write_ntriples: 0.01261,
-      q1: 0.00221, q2: 0.00175, q3: 0.00323, q4: 0.00371, q5: 0.00952, q6: 0.0033,
-      q1_cold: 0.00368, q2_cold: 0.02028, q3_cold: 0.00436, q4_cold: 0.00835, q5_cold: 0.01012, q6_cold: 0.0111
+      read_turtle: 0.14661, write_turtle: 0.06684, read_ntriples: 0.07318, write_ntriples: 0.0115,
+      q1: 0.00356, q2: 0.00219, q3: 0.00285, q4: 0.00292, q5: 0.01001, q6: 0.00295,
+      q1_cold: 0.00356, q2_cold: 0.01551, q3_cold: 0.00522, q4_cold: 0.00639, q5_cold: 0.0124, q6_cold: 0.0089
     },
     large: {
-      read_turtle: 0.802, write_turtle: 0.764, read_ntriples: 0.78568, write_ntriples: 0.07511,
-      q1: 0.01089, q2: 0.00394, q3: 0.00655, q4: 0.00798, q5: 0.01716, q6: 0.00517,
-      q1_cold: 0.01101, q2_cold: 0.00405, q3_cold: 0.00692, q4_cold: 0.00975, q5_cold: 0.01754, q6_cold: 0.0054
+      read_turtle: 0.78568, write_turtle: 0.16617, read_ntriples: 0.81957, write_ntriples: 0.08201,
+      q1: 0.01078, q2: 0.00399, q3: 0.00723, q4: 0.00528, q5: 0.01745, q6: 0.00508,
+      q1_cold: 0.01127, q2_cold: 0.00466, q3_cold: 0.00802, q4_cold: 0.00619, q5_cold: 0.01759, q6_cold: 0.00546
     },
     xlarge: {
-      read_turtle: 9.26567, write_turtle: 7.52027, read_ntriples: 9.55677, write_ntriples: 0.67776,
-      q1: 0.0772, q2: 0.01848, q3: 0.04355, q4: 0.04732, q5: 0.07837, q6: 0.01921,
-      q1_cold: 0.07717, q2_cold: 0.02171, q3_cold: 0.04691, q4_cold: 0.04685, q5_cold: 0.08248, q6_cold: 0.02005
+      read_turtle: 9.52863, write_turtle: 1.33969, read_ntriples: 9.35951, write_ntriples: 0.71679,
+      q1: 0.07324, q2: 0.01856, q3: 0.03985, q4: 0.03064, q5: 0.08071, q6: 0.0196,
+      q1_cold: 0.07401, q2_cold: 0.0196, q3_cold: 0.04171, q4_cold: 0.03277, q5_cold: 0.08276, q6_cold: 0.01923
     },
   },
   oxigraph: {
     medium: {
-      read_turtle: 0.12303, write_turtle: 0.02746, read_ntriples: 0.09658, write_ntriples: 0.027,
-      q1: 0.00718, q2: 0.01189, q3: 0.00195, q4: 0.00978, q5: 0.00375, q6: 0.00054,
-      q1_cold: 0.00799, q2_cold: 0.01293, q3_cold: 0.00247, q4_cold: 0.01162, q5_cold: 0.00457, q6_cold: 0.00074
+      read_turtle: 0.14199, write_turtle: 0.03198, read_ntriples: 0.09832, write_ntriples: 0.0313,
+      q1: 0.00771, q2: 0.01223, q3: 0.00214, q4: 0.0104, q5: 0.00405, q6: 0.00055,
+      q1_cold: 0.00843, q2_cold: 0.01443, q3_cold: 0.00237, q4_cold: 0.01365, q5_cold: 0.00473, q6_cold: 0.00073
     },
     large: {
-      read_turtle: 1.26446, write_turtle: 0.28283, read_ntriples: 1.10038, write_ntriples: 0.2808,
-      q1: 0.07281, q2: 0.14914, q3: 0.02669, q4: 0.15693, q5: 0.05613, q6: 0.00555,
-      q1_cold: 0.07348, q2_cold: 0.15478, q3_cold: 0.03241, q4_cold: 0.15335, q5_cold: 0.06184, q6_cold: 0.00913
+      read_turtle: 1.3242, write_turtle: 0.32166, read_ntriples: 1.17969, write_ntriples: 0.31213,
+      q1: 0.07884, q2: 0.15672, q3: 0.0304, q4: 0.15256, q5: 0.05709, q6: 0.00625,
+      q1_cold: 0.08041, q2_cold: 0.15879, q3_cold: 0.03283, q4_cold: 0.16699, q5_cold: 0.06194, q6_cold: 0.00768
     },
     xlarge: {
-      read_turtle: 14.58876, write_turtle: 3.14806, read_ntriples: 13.0633, write_ntriples: 3.14973,
-      q1: 0.7308, q2: 1.90191, q3: 0.35591, q4: 1.59786, q5: 0.67534, q6: 0.02868,
-      q1_cold: 0.74258, q2_cold: 1.95529, q3_cold: 0.3664, q4_cold: 1.66758, q5_cold: 0.71996, q6_cold: 0.04309
+      read_turtle: 15.2532, write_turtle: 3.57687, read_ntriples: 13.1279, write_ntriples: 3.46427,
+      q1: 0.786, q2: 2.11307, q3: 0.39029, q4: 1.7165, q5: 0.75449, q6: 0.03461,
+      q1_cold: 0.7958, q2_cold: 2.21118, q3_cold: 0.38968, q4_cold: 1.75063, q5_cold: 0.77331, q6_cold: 0.03951
     },
   },
   rdflib: {
     medium: {
-      read_turtle: 2.00214, write_turtle: 1.19897, read_ntriples: 1.08057, write_ntriples: 0.18253,
-      q1: 0.38756, q2: 0.40081, q3: 0.10437, q4: 0.56246, q5: 0.12377, q6: 0.07145,
-      q1_cold: 0.48079, q2_cold: 0.39956, q3_cold: 0.10447, q4_cold: 0.56058, q5_cold: 0.12391, q6_cold: 0.07358
+      read_turtle: 1.71949, write_turtle: 1.14016, read_ntriples: 1.09295, write_ntriples: 0.17226,
+      q1: 0.35884, q2: 0.33025, q3: 0.05513, q4: 0.47249, q5: 0.07428, q6: 0.02562,
+      q1_cold: 0.46084, q2_cold: 0.33471, q3_cold: 0.05551, q4_cold: 0.47602, q5_cold: 0.07505, q6_cold: 0.02815
     },
     large: {
-      read_turtle: 21.17743, write_turtle: 13.6666, read_ntriples: 11.89511, write_ntriples: 1.87997,
-      q1: 3.91469, q2: 4.144, q3: 1.38525, q4: 5.86333, q5: 1.5405, q6: 0.83781,
-      q1_cold: 3.89828, q2_cold: 4.16752, q3_cold: 1.4013, q4_cold: 5.92636, q5_cold: 1.54875, q6_cold: 0.8405
+      read_turtle: 18.5584, write_turtle: 12.2812, read_ntriples: 11.2627, write_ntriples: 1.74822,
+      q1: 3.63768, q2: 3.24926, q3: 0.65248, q4: 4.76189, q5: 0.8316, q6: 0.16258,
+      q1_cold: 3.64961, q2_cold: 3.24819, q3_cold: 0.65764, q4_cold: 4.78715, q5_cold: 0.83564, q6_cold: 0.16338
     },
     xlarge: {
-      read_turtle: 223.06808, write_turtle: 148.82861, read_ntriples: 127.47881, write_ntriples: 22.19023,
-      q1: 40.51324, q2: 42.61982, q3: 15.22097, q4: 59.2432, q5: 16.17115, q6: 7.39643,
-      q1_cold: 42.02066, q2_cold: 42.62022, q3_cold: 15.54657, q4_cold: 60.94605, q5_cold: 16.54637, q6_cold: 7.52504
+      read_turtle: 191.585, write_turtle: 134.717, read_ntriples: 154.582, write_ntriples: 17.5094,
+      q1: 37.0284, q2: 32.6759, q3: 7.59513, q4: 48.0879, q5: 9.00212, q6: 0.78661,
+      q1_cold: 38.1012, q2_cold: 32.8229, q3_cold: 7.62199, q4_cold: 48.6312, q5_cold: 9.03516, q6_cold: 0.80851
     },
   },
   jena: {
     medium: {
-      read_turtle: 0.1604, write_turtle: 0.1382, read_ntriples: 0.1923, write_ntriples: 0.0791,
-      q1: 0.0151, q2: 0.0393, q3: 0.0066, q4: 0.0306, q5: 0.0075, q6: 0.0017,
-      q1_cold: 0.0927, q2_cold: 0.0718, q3_cold: 0.0073, q4_cold: 0.0623, q5_cold: 0.0136, q6_cold: 0.0092
+      read_turtle: 0.1781, write_turtle: 0.1482, read_ntriples: 0.1508, write_ntriples: 0.0745,
+      q1: 0.0158, q2: 0.0275, q3: 0.0049, q4: 0.0293, q5: 0.0042, q6: 0.0015,
+      q1_cold: 0.1026, q2_cold: 0.145, q3_cold: 0.0071, q4_cold: 0.0668, q5_cold: 0.0133, q6_cold: 0.0101
     },
     large: {
-      read_turtle: 1.7274, write_turtle: 0.6999, read_ntriples: 1.5937, write_ntriples: 0.3396,
-      q1: 0.1599, q2: 0.1784, q3: 0.0239, q4: 0.1824, q5: 0.033, q6: 0.0068,
-      q1_cold: 0.1648, q2_cold: 0.2134, q3_cold: 0.0271, q4_cold: 0.2114, q5_cold: 0.0443, q6_cold: 0.0084
+      read_turtle: 1.5144, write_turtle: 0.7428, read_ntriples: 1.3516, write_ntriples: 0.4125,
+      q1: 0.1608, q2: 0.2771, q3: 0.0307, q4: 0.2601, q5: 0.035, q6: 0.0058,
+      q1_cold: 0.2092, q2_cold: 0.2801, q3_cold: 0.0372, q4_cold: 0.3174, q5_cold: 0.0458, q6_cold: 0.0086
     },
     xlarge: {
-      read_turtle: 18.5659, write_turtle: 6.5163, read_ntriples: 18.9341, write_ntriples: 3.6292,
-      q1: 1.8495, q2: 2.4911, q3: 0.2835, q4: 2.2299, q5: 0.3511, q6: 0.0268,
-      q1_cold: 1.8766, q2_cold: 2.6775, q3_cold: 0.2972, q4_cold: 2.2373, q5_cold: 0.3584, q6_cold: 0.0379
+      read_turtle: 16.7159, write_turtle: 6.7366, read_ntriples: 16.4872, write_ntriples: 3.8937,
+      q1: 1.8365, q2: 3.2779, q3: 0.3293, q4: 3.0858, q5: 0.3766, q6: 0.0282,
+      q1_cold: 2.222, q2_cold: 3.3817, q3_cold: 0.346, q4_cold: 3.5452, q5_cold: 0.4073, q6_cold: 0.0578
     },
   },
   rdf4j: {
     medium: {
-      read_turtle: 0.2103, write_turtle: 0.2557, read_ntriples: 0.1249, write_ntriples: 0.1712,
-      q1: 0.0063, q2: 0.0123, q3: 0.0044, q4: 0.023, q5: 0.0106, q6: 0.0022,
-      q1_cold: 0.0514, q2_cold: 0.0379, q3_cold: 0.0055, q4_cold: 0.029, q5_cold: 0.0159, q6_cold: 0.0095
+      read_turtle: 0.2294, write_turtle: 0.2833, read_ntriples: 0.1315, write_ntriples: 0.1807,
+      q1: 0.006, q2: 0.016, q3: 0.0056, q4: 0.0246, q5: 0.0123, q6: 0.0024,
+      q1_cold: 0.0604, q2_cold: 0.0442, q3_cold: 0.0074, q4_cold: 0.0282, q5_cold: 0.0183, q6_cold: 0.0103
     },
     large: {
-      read_turtle: 2.5776, write_turtle: 1.7274, read_ntriples: 1.2619, write_ntriples: 1.6102,
-      q1: 0.0599, q2: 0.0617, q3: 0.0107, q4: 0.0814, q5: 0.0189, q6: 0.0049,
-      q1_cold: 0.0672, q2_cold: 0.0684, q3_cold: 0.0127, q4_cold: 0.0826, q5_cold: 0.03, q6_cold: 0.0067
+      read_turtle: 2.5348, write_turtle: 1.9185, read_ntriples: 1.3941, write_ntriples: 1.6446,
+      q1: 0.0497, q2: 0.0614, q3: 0.0127, q4: 0.0735, q5: 0.0173, q6: 0.005,
+      q1_cold: 0.0862, q2_cold: 0.0701, q3_cold: 0.0141, q4_cold: 0.0764, q5_cold: 0.0297, q6_cold: 0.0077
     },
     xlarge: {
-      read_turtle: 25.4046, write_turtle: 17.5319, read_ntriples: 14.115, write_ntriples: 12.7277,
-      q1: 0.6983, q2: 0.864, q3: 0.1545, q4: 1.1442, q5: 0.2469, q6: 0.0195,
-      q1_cold: 0.7187, q2_cold: 1.0742, q3_cold: 0.1644, q4_cold: 1.1485, q5_cold: 0.2613, q6_cold: 0.0269
+      read_turtle: 24.8953, write_turtle: 19.3418, read_ntriples: 13.8812, write_ntriples: 13.176,
+      q1: 0.6783, q2: 0.9001, q3: 0.1653, q4: 1.1611, q5: 0.2685, q6: 0.0221,
+      q1_cold: 0.7156, q2_cold: 0.9932, q3_cold: 0.1955, q4_cold: 1.1847, q5_cold: 0.3487, q6_cold: 0.0398
     },
   },
   qlever: {
@@ -819,36 +819,36 @@ const DATA = {
   },
   virtuoso: {
     medium: {
-      read_turtle: 0.64387, write_turtle: null, read_ntriples: 1.02404, write_ntriples: null,
-      q1: 0.00243, q2: 0.00323, q3: 0.00273, q4: 0.01397, q5: 0.02235, q6: null,
-      q1_cold: 0.00294, q2_cold: 0.03414, q3_cold: 0.03092, q4_cold: 0.02262, q5_cold: 0.02559, q6_cold: null
+      read_turtle: 0.61856, write_turtle: null, read_ntriples: 1.01978, write_ntriples: null,
+      q1: 0.00163, q2: 0.00253, q3: 0.00273, q4: 0.01228, q5: 0.02079, q6: null,
+      q1_cold: 0.00222, q2_cold: 0.03357, q3_cold: 0.03036, q4_cold: 0.01797, q5_cold: 0.02315, q6_cold: null
     },
     large: {
-      read_turtle: 1.98613, write_turtle: null, read_ntriples: 6.8604, write_ntriples: null,
-      q1: 0.00766, q2: 0.01996, q3: 0.00836, q4: 0.1488, q5: 0.22263, q6: null,
-      q1_cold: 0.00773, q2_cold: 0.10868, q3_cold: 0.08171, q4_cold: 0.16609, q5_cold: 0.24399, q6_cold: null
+      read_turtle: 1.94589, write_turtle: null, read_ntriples: 6.63785, write_ntriples: null,
+      q1: 0.00554, q2: 0.01939, q3: 0.00698, q4: 0.14324, q5: 0.22066, q6: null,
+      q1_cold: 0.00584, q2_cold: 0.10892, q3_cold: 0.07987, q4_cold: 0.16249, q5_cold: 0.23077, q6_cold: null
     },
     xlarge: {
-      read_turtle: 14.59342, write_turtle: null, read_ntriples: 77.78868, write_ntriples: null,
-      q1: 0.04137, q2: 0.02618, q3: 0.01676, q4: 0.00207, q5: 0.53728, q6: null,
-      q1_cold: 0.042, q2_cold: 0.26515, q3_cold: 0.10528, q4_cold: 0.03186, q5_cold: 0.56922, q6_cold: null
+      read_turtle: 14.4108, write_turtle: null, read_ntriples: 77.2194, write_ntriples: null,
+      q1: 0.05497, q2: 0.04938, q3: 0.13531, q4: 1.92298, q5: 2.83405, q6: null,
+      q1_cold: 0.0556, q2_cold: 0.32181, q3_cold: 0.23663, q4_cold: 2.10042, q5_cold: 2.89275, q6_cold: null
     },
   },
   maplib_disk: {
     medium: {
-      read_turtle: 0.38236, write_turtle: 1.55892, read_ntriples: 0.30819, write_ntriples: 0.09443,
-      q1: 0.0545, q2: 0.00551, q3: 0.01893, q4: 0.01589, q5: 0.07556, q6: 0.03225,
-      q1_cold: 0.05744, q2_cold: 0.00614, q3_cold: 0.02011, q4_cold: 0.01691, q5_cold: 0.08209, q6_cold: 0.03376
+      read_turtle: 0.41423, write_turtle: 0.29987, read_ntriples: 0.35093, write_ntriples: 0.09129,
+      q1: 0.05865, q2: 0.00672, q3: 0.01889, q4: 0.01559, q5: 0.07817, q6: 0.03568,
+      q1_cold: 0.06443, q2_cold: 0.00722, q3_cold: 0.02063, q4_cold: 0.01624, q5_cold: 0.08548, q6_cold: 0.03475
     },
     large: {
-      read_turtle: 1.30402, write_turtle: 9.8325, read_ntriples: 1.30992, write_ntriples: 0.22405,
-      q1: 0.06627, q2: 0.00799, q3: 0.02341, q4: 0.02018, q5: 0.0922, q6: 0.03731,
-      q1_cold: 0.07148, q2_cold: 0.00828, q3_cold: 0.0255, q4_cold: 0.02309, q5_cold: 0.09567, q6_cold: 0.03864
+      read_turtle: 1.3964, write_turtle: 0.45825, read_ntriples: 1.36012, write_ntriples: 0.22811,
+      q1: 0.0677, q2: 0.00846, q3: 0.02483, q4: 0.01914, q5: 0.09836, q6: 0.03909,
+      q1_cold: 0.07338, q2_cold: 0.00974, q3_cold: 0.0246, q4_cold: 0.02045, q5_cold: 0.10425, q6_cold: 0.04127
     },
     xlarge: {
-      read_turtle: 12.8407, write_turtle: 135.35311, read_ntriples: 11.98988, write_ntriples: 1.3623,
-      q1: 0.14171, q2: 0.02245, q3: 0.05864, q4: 0.05776, q5: 0.22529, q6: 0.04068,
-      q1_cold: 0.13571, q2_cold: 0.02399, q3_cold: 0.0671, q4_cold: 0.06199, q5_cold: 0.24117, q6_cold: 0.04281
+      read_turtle: 13.2126, write_turtle: 5.10633, read_ntriples: 12.0694, write_ntriples: 1.35551,
+      q1: 0.14295, q2: 0.02298, q3: 0.05915, q4: 0.04801, q5: 0.2302, q6: 0.04345,
+      q1_cold: 0.14527, q2_cold: 0.02258, q3_cold: 0.05712, q4_cold: 0.05289, q5_cold: 0.23314, q6_cold: 0.04545
     },
   },
   graphdb: {
@@ -870,14 +870,14 @@ const DATA = {
   },
   dotnetrdf: {
     medium: {
-      read_turtle: 1.47465, write_turtle: 0.28178, read_ntriples: 0.80487, write_ntriples: 0.42283,
-      q1: 0.07563, q2: 0.07682, q3: 0.03449, q4: 0.07828, q5: 0.02074, q6: 0.00401,
-      q1_cold: 0.14284, q2_cold: 0.11485, q3_cold: 0.03555, q4_cold: 0.09411, q5_cold: 0.02334, q6_cold: 0.02106
+      read_turtle: 1.40573, write_turtle: 0.29157, read_ntriples: 0.83659, write_ntriples: 0.39582,
+      q1: 0.05633, q2: 0.08191, q3: 0.0336, q4: 0.09573, q5: 0.02044, q6: 0.00461,
+      q1_cold: 0.128, q2_cold: 0.11437, q3_cold: 0.03779, q4_cold: 0.09594, q5_cold: 0.02459, q6_cold: 0.02239
     },
     large: {
-      read_turtle: 9.03717, write_turtle: 2.27061, read_ntriples: 8.61601, write_ntriples: 1.72106,
-      q1: 0.61071, q2: 0.75002, q3: 0.41932, q4: 0.83374, q5: 0.3228, q6: 0.07,
-      q1_cold: 0.66662, q2_cold: 0.74372, q3_cold: 0.42183, q4_cold: 0.83088, q5_cold: 0.3501, q6_cold: 0.08456
+      read_turtle: 9.29823, write_turtle: 2.35351, read_ntriples: 8.72216, write_ntriples: 1.87052,
+      q1: 0.66369, q2: 0.85972, q3: 0.44538, q4: 0.89082, q5: 0.32383, q6: 0.08127,
+      q1_cold: 0.75637, q2_cold: 0.88351, q3_cold: 0.45049, q4_cold: 1.01474, q5_cold: 0.35684, q6_cold: 0.1415
     },
     xlarge: {
       read_turtle: null, write_turtle: null, read_ntriples: null, write_ntriples: null,
@@ -934,8 +934,8 @@ const FW_LABELS = {
 };
 
 // ── State ──
-let currentIOScale = 'medium';
-let currentQueryScale = 'medium';
+let currentIOScale = 'large';
+let currentQueryScale = 'large';
 let ioLogScale = false;
 let queryLogScale = false;
 const visibleFW = new Set(FW_ORDER);   // all visible by default
@@ -1298,10 +1298,10 @@ function toggleQuery(qid) {
 
 // ── Init ──
 buildFilter('global-filter', 'global');
-buildIOCharts('medium', false);
-buildQueryCharts('medium', false);
-buildTable('io-table', IO_OPS, IO_LABELS, 'medium');
-buildTable('query-table', coldMode ? Q_COLD_OPS : Q_OPS, coldMode ? Q_COLD_LABELS : Q_LABELS, 'medium');
+buildIOCharts('large', false);
+buildQueryCharts('large', false);
+buildTable('io-table', IO_OPS, IO_LABELS, 'large');
+buildTable('query-table', coldMode ? Q_COLD_OPS : Q_OPS, coldMode ? Q_COLD_LABELS : Q_LABELS, 'large');
 buildScaleCharts();
 </script>
 

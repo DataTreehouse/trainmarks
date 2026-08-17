@@ -26,16 +26,16 @@ echo "Root: $ROOT"
 
 # Python frameworks
 run_bench "1/13" "maplib" \
-    "cd '$ROOT/python-maplib' && python3 bench_maplib.py"
+    "cd '$ROOT/python-maplib' && uv run bench_maplib.py"
 
 run_bench "2/13" "maplib (disk)" \
-    "cd '$ROOT/python-maplib-disk' && python3 bench_maplib_disk.py"
+    "cd '$ROOT/python-maplib-disk' && uv run bench_maplib_disk.py"
 
 run_bench "3/13" "oxigraph" \
-    "cd '$ROOT/python-oxigraph' && python3 bench_oxigraph.py"
+    "cd '$ROOT/python-oxigraph' && uv run --with pyoxigraph bench_oxigraph.py"
 
 run_bench "4/13" "rdflib (slow)" \
-    "cd '$ROOT/python-rdflib' && python3 bench_rdflib.py"
+    "cd '$ROOT/python-rdflib' && uv run --with rdflib bench_rdflib.py"
 
 # Java frameworks
 if command -v mvn &> /dev/null; then
@@ -51,7 +51,7 @@ fi
 # QLever (native binary)
 if command -v qlever-index &> /dev/null; then
     run_bench "7/13" "QLever (native)" \
-        "cd '$ROOT/qlever' && python3 bench_qlever.py"
+        "cd '$ROOT/qlever' && uv run bench_qlever.py"
 else
     SKIPPED="$SKIPPED  - QLever (qlever-index not found; brew install qlever)\n"
 fi
@@ -59,19 +59,19 @@ fi
 # Docker frameworks
 if command -v docker &> /dev/null; then
     run_bench "8/13" "Virtuoso (Docker)" \
-        "cd '$ROOT/virtuoso' && python3 bench_virtuoso.py"
+        "cd '$ROOT/virtuoso' && uv run bench_virtuoso.py"
 
     run_bench "9/13" "GraphDB (Docker)" \
-        "cd '$ROOT/graphdb' && python3 bench_graphdb.py"
+        "cd '$ROOT/graphdb' && uv run bench_graphdb.py"
 
     run_bench "10/13" "dotNetRDF (Docker)" \
-        "cd '$ROOT/dotnetrdf' && python3 bench_dotnetrdf.py"
+        "cd '$ROOT/dotnetrdf' && uv run bench_dotnetrdf.py"
 
     run_bench "11/13" "Neo4j + n10s (Docker)" \
-        "cd '$ROOT/neo4j' && python3 bench_neo4j.py"
+        "cd '$ROOT/neo4j' && uv run bench_neo4j.py"
 
     run_bench "12/13" "Blazegraph (Docker)" \
-        "cd '$ROOT/blazegraph' && python3 bench_blazegraph.py"
+        "cd '$ROOT/blazegraph' && uv run bench_blazegraph.py"
 else
     SKIPPED="$SKIPPED  - Virtuoso, GraphDB, dotNetRDF, Neo4j, Blazegraph (docker not found)\n"
 fi
@@ -79,7 +79,7 @@ fi
 # Node.js frameworks
 if command -v node &> /dev/null; then
     run_bench "13/13" "Comunica (Node.js)" \
-        "cd '$ROOT/comunica' && python3 bench_comunica.py"
+        "cd '$ROOT/comunica' && uv run bench_comunica.py"
 else
     SKIPPED="$SKIPPED  - Comunica (node not found)\n"
 fi
