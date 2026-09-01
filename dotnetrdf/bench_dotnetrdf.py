@@ -20,6 +20,10 @@ DATA_DIR = os.path.join(SCRIPT_DIR, "..", "data")
 QUERIES_DIR = os.path.join(SCRIPT_DIR, "..", "queries")
 RESULTS_DIR = os.path.join(SCRIPT_DIR, "..", "results")
 CONTAINER_NAME = "dotnetrdf-bench"
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from docker_mem import ContainerMemSampler  # noqa: E402
+MEM = ContainerMemSampler(CONTAINER_NAME)
 IMAGE_NAME = "dotnetrdf-bench"
 
 def docker_run(args, timeout=600):
@@ -112,6 +116,7 @@ if __name__ == "__main__":
     if not build_image():
         sys.exit(1)
 
+    MEM.start()  # sample container memory during the (single) benchmark run
     if not run_benchmark():
         sys.exit(1)
 
@@ -120,6 +125,16 @@ if __name__ == "__main__":
     if os.path.exists(results_file):
         with open(results_file) as f:
             data = json.load(f)
+        # The C# app writes its own results; inject a container-wide peak-memory
+        # figure (one docker run covers all scales, so this is the overall peak).
+        peak = MEM.peak_mb
+        if peak is not None:
+            scales = sorted({r.get("scale") for r in data if r.get("scale")})
+            for sc in scales:
+                data.append({"framework": "dotnetrdf", "scale": sc,
+                             "operation": "peak_memory", "seconds": None, "peak_mb": peak})
+            with open(results_file, "w") as f:
+                json.dump(data, f, indent=2)
         print(f"\nBenchmark complete: {len(data)} results saved to results/results_dotnetrdf.json")
     else:
         print("\nWARNING: No results file found")

@@ -1,14 +1,13 @@
 """
-Benchmark: oxigraph (via pyoxigraph) — I/O and SPARQL queries. IN-MEMORY store.
+Benchmark: oxigraph (via pyoxigraph) — I/O and SPARQL queries. DISK-BACKED store.
 Runs on medium (~100K), large (~1M), and xlarge (~10M) datasets.
 Timeout: 5 minutes per operation.
 
-Storage note: pyoxigraph's Store() with NO path keeps all data in memory and
-never writes to disk (per pyoxigraph docs). This benchmark therefore measures
-the IN-MEMORY engine. The disk-backed RocksDB variant is python-oxigraph-disk.
+Storage note: this variant passes a filesystem path to pyoxigraph's Store(),
+so data is persisted to an on-disk RocksDB database (unlike the default
+python-oxigraph benchmark, which uses Store() with no path = in-memory).
 
-Each result records peak process RSS (MB) during the operation, sampled by a
-background thread, so memory use can be compared against timing.
+Each result records peak process RSS (MB) during the operation.
 """
 
 import time
@@ -16,13 +15,19 @@ import json
 import os
 import gc
 import signal
+import shutil
+import tempfile
 import threading
 from pyoxigraph import Store, RdfFormat, DefaultGraph
 
-FRAMEWORK = "oxigraph"
+FRAMEWORK = "oxigraph_disk"
 QUERIES_DIR = os.path.join(os.path.dirname(__file__), "..", "queries")
+STORAGE_BASE = os.path.join(os.path.dirname(__file__), "oxigraph-storage")
 RESULTS = []
 TIMEOUT = 600  # 10 minutes
+
+# Track on-disk store directories so we can clean them up.
+_STORE_DIRS = []
 
 # --- peak-memory sampling -------------------------------------------------
 try:
@@ -106,8 +111,19 @@ def rec(scale, operation, seconds, peak_mb=None):
 
 
 def new_store():
-    """In-memory store (no path)."""
-    return Store()
+    """Fresh on-disk RocksDB store in a unique directory (tracked for cleanup)."""
+    os.makedirs(STORAGE_BASE, exist_ok=True)
+    d = tempfile.mkdtemp(prefix="store_", dir=STORAGE_BASE)
+    _STORE_DIRS.append(d)
+    return Store(d)
+
+
+def cleanup_stores():
+    """Drop RocksDB locks (gc) and remove all on-disk store directories."""
+    gc.collect()
+    for d in _STORE_DIRS:
+        shutil.rmtree(d, ignore_errors=True)
+    _STORE_DIRS.clear()
 
 
 def load_query(name):
@@ -117,7 +133,7 @@ def load_query(name):
 
 def bench_io(scale, ttl_path, nt_path):
     print(f"\n{'='*60}")
-    print(f"oxigraph (in-memory) — {scale} dataset")
+    print(f"oxigraph (disk-backed RocksDB) — {scale} dataset")
     print(f"{'='*60}")
 
     # --- Read Turtle ---
@@ -135,7 +151,7 @@ def bench_io(scale, ttl_path, nt_path):
         return None
 
     # --- Write Turtle ---
-    out_ttl = f"../data/{scale}_oxigraph_out.ttl"
+    out_ttl = f"../data/{scale}_oxigraph_disk_out.ttl"
     def write_ttl():
         with open(out_ttl, "wb") as f:
             store.dump(f, format=RdfFormat.TURTLE, from_graph=DefaultGraph())
@@ -148,7 +164,7 @@ def bench_io(scale, ttl_path, nt_path):
         rec(scale, "write_turtle", "TIMEOUT")
 
     # --- Write N-Triples ---
-    out_nt = f"../data/{scale}_oxigraph_out.nt"
+    out_nt = f"../data/{scale}_oxigraph_disk_out.nt"
     def write_nt():
         with open(out_nt, "wb") as f:
             store.dump(f, format=RdfFormat.N_TRIPLES, from_graph=DefaultGraph())
@@ -160,7 +176,7 @@ def bench_io(scale, ttl_path, nt_path):
     else:
         rec(scale, "write_ntriples", "TIMEOUT")
 
-    # --- Read N-Triples ---
+    # --- Read N-Triples (fresh disk store) ---
     def read_nt():
         s2 = new_store()
         with open(nt_path, "rb") as f:
@@ -219,12 +235,16 @@ def bench_queries(store, scale):
 
 
 if __name__ == "__main__":
-    for scale in ["medium", "large", "xlarge"]:
-        s = bench_io(scale, f"../data/{scale}.ttl", f"../data/{scale}.nt")
-        bench_queries(s, scale)
-        del s
-        gc.collect()
+    try:
+        for scale in ["medium", "large", "xlarge"]:
+            s = bench_io(scale, f"../data/{scale}.ttl", f"../data/{scale}.nt")
+            bench_queries(s, scale)
+            del s
+            cleanup_stores()  # drop RocksDB dirs before the next scale
+            gc.collect()
+    finally:
+        cleanup_stores()
 
-    with open("../results/results_oxigraph.json", "w") as f:
+    with open("../results/results_oxigraph_disk.json", "w") as f:
         json.dump(RESULTS, f, indent=2)
-    print(f"\nResults saved to results_oxigraph.json")
+    print(f"\nResults saved to results_oxigraph_disk.json")

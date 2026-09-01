@@ -30,6 +30,15 @@ virtuoso/virtuoso-workdir/
 # maplib disk storage
 python-maplib-disk/maplib-storage/
 
+# oxigraph disk storage (RocksDB)
+python-oxigraph-disk/oxigraph-storage/
+
+# tentris datastore
+tentris/tentris-storage/
+
+# constrained-memory test output (kept separate from the main results/)
+mem-cap-test/results/
+
 # Neo4j n10s plugin JAR (downloaded at runtime)
 neo4j/plugins/
 
@@ -41,6 +50,9 @@ graphdb/repo-config.ttl
 
 # ERA SHACL Benchmark (external repo, referenced by URL)
 ERA-SHACL-Benchmark-main/
+
+# maplib LUX benchmark (separate project — not part of the engine benchmark)
+maplib-lux-benchmark/
 
 # OS
 .DS_Store

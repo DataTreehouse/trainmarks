@@ -18,10 +18,13 @@ import java.util.*;
 public class JenaBenchmark {
 
     static List<Map<String, Object>> RESULTS = new ArrayList<>();
+    static MemSampler MEM = new MemSampler();
 
     public static void main(String[] args) throws Exception {
         String dataDir = args.length > 0 ? args[0] : "../data";
         String queryDir = args.length > 1 ? args[1] : "../queries";
+
+        MEM.start();  // background heap-usage sampler
 
         // Warmup JVM
         System.out.println("JVM warmup...");
@@ -160,6 +163,42 @@ public class JenaBenchmark {
         r.put("scale", scale);
         r.put("operation", operation);
         r.put("seconds", Math.round(seconds * 10000.0) / 10000.0);
+        // Peak JVM heap used (MB) during this operation, i.e. since the previous
+        // addResult call. NOTE: this is heap-used, not process RSS, so it is a
+        // different basis than the psutil RSS numbers from the Python engines.
+        r.put("peak_mb", MEM.snapshotResetMb());
         RESULTS.add(r);
+    }
+
+    /** Background thread tracking the peak JVM heap used since the last snapshot. */
+    static class MemSampler {
+        private volatile long peak = 0;
+        private volatile boolean running = false;
+
+        static long usedBytes() {
+            Runtime rt = Runtime.getRuntime();
+            return rt.totalMemory() - rt.freeMemory();
+        }
+
+        void start() {
+            running = true;
+            peak = usedBytes();
+            Thread t = new Thread(() -> {
+                while (running) {
+                    long u = usedBytes();
+                    if (u > peak) peak = u;
+                    try { Thread.sleep(50); } catch (InterruptedException e) { break; }
+                }
+            });
+            t.setDaemon(true);
+            t.start();
+        }
+
+        /** Return peak-used-heap (MB) since last call, then reset to current usage. */
+        double snapshotResetMb() {
+            long p = Math.max(peak, usedBytes());
+            peak = usedBytes();
+            return Math.round(p / (1024.0 * 1024.0) * 10.0) / 10.0;
+        }
     }
 }

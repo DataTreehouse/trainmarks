@@ -13,7 +13,7 @@ I/O mapping:
 
 Prerequisites:
   - Docker installed and running
-  - GraphDB Docker image: docker pull ontotext/graphdb:11.4.3
+  - GraphDB Docker image: docker pull ontotext/graphdb:10.8.0
 """
 
 import time
@@ -33,9 +33,14 @@ RESULTS = []
 TIMEOUT = 600  # 10 minutes default
 LOAD_TIMEOUT = 600  # 10 minutes for large imports
 
-GRAPHDB_IMAGE = "ontotext/graphdb:11.4.3"
+GRAPHDB_IMAGE = "ontotext/graphdb:10.8.0"
 GRAPHDB_PORT = 7200
 CONTAINER_NAME = "graphdb-bench"
+
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from docker_mem import ContainerMemSampler  # noqa: E402
+MEM = ContainerMemSampler(CONTAINER_NAME)
 REPO_NAME = "benchmark"
 
 
@@ -482,6 +487,8 @@ if __name__ == "__main__":
         print("ERROR: Could not start GraphDB. Exiting.")
         exit(1)
 
+    MEM.start()
+
     for scale in ["medium", "large", "xlarge"]:
         ttl_path = os.path.join(DATA_DIR, f"{scale}.ttl")
         nt_path = os.path.join(DATA_DIR, f"{scale}.nt")
@@ -490,9 +497,11 @@ if __name__ == "__main__":
             print(f"\n  Skipping {scale} — {ttl_path} not found")
             continue
 
+        MEM.reset()
         try:
             server_ready = bench_io(scale, ttl_path, nt_path)
             bench_queries(server_ready, scale)
+            RESULTS.append({"framework": "graphdb", "scale": scale, "operation": "peak_memory", "seconds": None, "peak_mb": MEM.peak_mb})
         except Exception as e:
             print(f"\n  ERROR on {scale}: {e}")
             print("  Saving partial results and continuing...")

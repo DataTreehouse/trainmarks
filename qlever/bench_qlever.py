@@ -1,5 +1,5 @@
 """
-Benchmark: QLever — index building and SPARQL queries via native binaries.
+Benchmark: QLever — index building and SPARQL queries via Docker.
 Runs on medium (~100K), large (~1M), and xlarge (~10M) datasets.
 Timeout: 5 minutes per operation (10 minutes for xlarge index build).
 
@@ -14,7 +14,8 @@ I/O mapping:
     a serialisation tool; these are recorded as "N/A")
 
 Prerequisites:
-  - qlever-index and qlever-server on PATH (e.g. brew install qlever)
+  - Docker installed and running
+  - QLever Docker image: docker pull adfreiburg/qlever
 """
 
 import time
@@ -34,13 +35,17 @@ RESULTS = []
 TIMEOUT = 600  # 10 minutes default
 INDEX_TIMEOUT = 600  # 10 minutes for index building (xlarge)
 
+QLEVER_IMAGE = "adfreiburg/qlever"
 QLEVER_PORT = 7019  # Use non-standard port to avoid conflicts
+CONTAINER_NAME = "qlever-bench"
+
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from docker_mem import ContainerMemSampler  # noqa: E402
+MEM = ContainerMemSampler(CONTAINER_NAME)
 
 # Working directory for QLever index files (inside the qlever/ folder)
 WORK_DIR = os.path.join(os.path.dirname(__file__), "qlever-workdir")
-
-# Track the server process so we can stop it between scales
-_server_proc = None
 
 
 class TimeoutError(Exception):
@@ -75,28 +80,30 @@ def load_query(name):
         return f.read()
 
 
-def stop_qlever():
-    """Stop any running QLever server process."""
-    global _server_proc
-    if _server_proc is not None:
-        try:
-            _server_proc.terminate()
-            _server_proc.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            _server_proc.kill()
-            _server_proc.wait(timeout=5)
-        except Exception:
-            pass
-        _server_proc = None
-    # Also kill any stray qlever-server on our port
+def docker_run(args, timeout=TIMEOUT):
+    """Run a Docker command with timeout. Returns (returncode, stdout, stderr)."""
+    cmd = ["docker"] + args
     try:
-        subprocess.run(
-            ["pkill", "-f", f"qlever-server.*-p {QLEVER_PORT}"],
-            capture_output=True, timeout=5,
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
         )
-    except Exception:
-        pass
-    time.sleep(0.5)
+        return result.returncode, result.stdout, result.stderr
+    except subprocess.TimeoutExpired:
+        return -1, "", "TIMEOUT"
+
+
+def stop_qlever():
+    """Stop and remove any running QLever benchmark container."""
+    subprocess.run(
+        ["docker", "rm", "-f", CONTAINER_NAME],
+        capture_output=True,
+        timeout=30,
+    )
+    # Brief pause to let the port free up
+    time.sleep(1)
 
 
 def clean_workdir():
@@ -108,10 +115,14 @@ def clean_workdir():
 
 def build_index(data_file, input_format="turtle"):
     """
-    Build a QLever index from the given data file using the native binary.
+    Build a QLever index from the given data file.
+
+    Uses the qlever CLI inside the Docker image. The data directory is
+    mounted at /input and the workdir at /data (QLever's expected working dir).
     """
     clean_workdir()
 
+    basename = os.path.basename(data_file)
     fmt = "ttl" if input_format == "turtle" else "nt"
 
     # Write a minimal settings JSON
@@ -125,33 +136,30 @@ def build_index(data_file, input_format="turtle"):
     with open(settings_path, "w") as f:
         json.dump(settings, f)
 
-    cmd = [
-        "qlever-index",
-        "-i", os.path.join(WORK_DIR, "index"),
-        "-f", os.path.abspath(data_file),
+    # Bypass the entrypoint and call qlever-index directly
+    rc, stdout, stderr = docker_run([
+        "run", "--rm",
+        "--entrypoint", "/qlever/qlever-index",
+        "-v", f"{os.path.abspath(DATA_DIR)}:/input:ro",
+        "-v", f"{os.path.abspath(WORK_DIR)}:/data",
+        "-w", "/data",
+        "--name", f"{CONTAINER_NAME}-index",
+        QLEVER_IMAGE,
+        "-i", "/data/index",
+        "-f", f"/input/{basename}",
         "-F", fmt,
-        "-s", settings_path,
-    ]
+        "-s", "/data/settings.json",
+    ], timeout=INDEX_TIMEOUT)
 
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=INDEX_TIMEOUT,
-            cwd=WORK_DIR,
-        )
-    except subprocess.TimeoutExpired:
-        print(f"    Index build timed out (>{INDEX_TIMEOUT}s)")
-        return False
-
-    if result.returncode != 0:
-        print(f"    Index build failed (rc={result.returncode})")
-        if result.stderr:
-            for line in result.stderr.strip().split("\n")[-10:]:
+    if rc != 0:
+        print(f"    Index build failed (rc={rc})")
+        if stderr:
+            lines = stderr.strip().split("\n")
+            for line in lines[-10:]:
                 print(f"      {line}")
-        if result.stdout:
-            for line in result.stdout.strip().split("\n")[-5:]:
+        if stdout:
+            lines = stdout.strip().split("\n")
+            for line in lines[-5:]:
                 print(f"      [stdout] {line}")
         return False
 
@@ -166,45 +174,48 @@ def build_index(data_file, input_format="turtle"):
 
 
 def start_server():
-    """Start the QLever server as a native background process."""
-    global _server_proc
+    """Start the QLever server in a Docker container."""
     stop_qlever()
 
-    cmd = [
-        "qlever-server",
-        "-i", os.path.join(WORK_DIR, "index"),
+    # Bypass the entrypoint and call qlever-server directly as root
+    # (index files were created as root by the index builder)
+    rc, stdout, stderr = docker_run([
+        "run", "-d",
+        "--entrypoint", "/qlever/qlever-server",
+        "--user", "root",
+        "--name", CONTAINER_NAME,
+        "-p", f"{QLEVER_PORT}:{QLEVER_PORT}",
+        "-v", f"{os.path.abspath(WORK_DIR)}:/data",
+        "-w", "/data",
+        QLEVER_IMAGE,
+        "-i", "/data/index",
         "-p", str(QLEVER_PORT),
-    ]
+    ])
 
-    _server_proc = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        cwd=WORK_DIR,
-    )
+    if rc != 0:
+        print(f"    Server start failed: {stderr}")
+        return False
 
-    print(f"    Server started (PID {_server_proc.pid}), waiting for endpoint...")
+    print(f"    Container started, waiting for endpoint...")
 
     # Wait for the server to be ready (poll the endpoint)
     endpoint = f"http://localhost:{QLEVER_PORT}"
     for attempt in range(60):  # up to 60 seconds
         time.sleep(1)
 
-        # Check if process is still alive
-        if _server_proc.poll() is not None:
-            stdout = _server_proc.stdout.read().decode("utf-8", errors="replace")
-            stderr = _server_proc.stderr.read().decode("utf-8", errors="replace")
-            print(f"    Server exited unexpectedly (rc={_server_proc.returncode})")
-            if stderr:
-                for line in stderr.strip().split("\n")[-10:]:
-                    print(f"      {line}")
-            if stdout:
-                for line in stdout.strip().split("\n")[-5:]:
-                    print(f"      [stdout] {line}")
-            _server_proc = None
+        # First check if container is still running
+        rc2, out2, _ = docker_run(["inspect", "--format", "{{.State.Running}}", CONTAINER_NAME], timeout=5)
+        if rc2 != 0 or "false" in out2.lower():
+            # Container exited — grab logs
+            _, logs, _ = docker_run(["logs", "--tail", "20", CONTAINER_NAME], timeout=5)
+            _, logs_err, _ = docker_run(["logs", "--tail", "20", CONTAINER_NAME], timeout=5)
+            print(f"    Container exited unexpectedly. Logs:")
+            print(logs)
             return False
 
         try:
+            # Send a simple SPARQL query to check readiness
+            # (bare GET to root may not return 200 on QLever)
             test_query = urllib.parse.urlencode({"query": "SELECT * WHERE { ?s ?p ?o } LIMIT 1"}).encode("utf-8")
             req = urllib.request.Request(endpoint, data=test_query,
                                         headers={"Accept": "application/sparql-results+json"})
@@ -216,8 +227,10 @@ def start_server():
             if attempt % 10 == 9:
                 print(f"    Still waiting... ({attempt + 1}s) — {e}")
 
-    print(f"    Server did not become ready within 60 seconds")
-    stop_qlever()
+    # Final check — dump logs
+    _, logs, _ = docker_run(["logs", "--tail", "20", CONTAINER_NAME], timeout=5)
+    print(f"    Server did not become ready within 60 seconds. Logs:")
+    print(logs)
     return False
 
 
@@ -267,7 +280,7 @@ def bench_io(scale, ttl_path, nt_path):
     equivalent of loading data into an in-memory store.
     """
     print(f"\n{'='*60}")
-    print(f"QLever (native) — {scale} dataset")
+    print(f"QLever — {scale} dataset")
     print(f"{'='*60}")
 
     index_timeout = INDEX_TIMEOUT if scale == "xlarge" else TIMEOUT
@@ -366,25 +379,25 @@ def bench_queries(server_ready, scale):
 
 
 if __name__ == "__main__":
-    # Verify native binaries are available
-    for binary in ["qlever-index", "qlever-server"]:
-        if shutil.which(binary) is None:
-            print(f"ERROR: '{binary}' not found on PATH.")
-            print("  Install with: brew install qlever")
-            print(f"  Or check: which {binary}")
-            exit(1)
-
-    # Show version info
+    # Verify Docker is available
     try:
-        result = subprocess.run(["qlever-index", "--help"], capture_output=True, text=True, timeout=5)
-        # First line often contains version
-        first_line = (result.stdout or result.stderr or "").strip().split("\n")[0]
-        print(f"  qlever-index: {first_line}")
-    except Exception:
-        pass
+        subprocess.run(["docker", "info"], capture_output=True, timeout=60, check=True)
+    except subprocess.TimeoutExpired:
+        print("ERROR: Docker is slow to respond. Is Docker Desktop fully started?")
+        exit(1)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("ERROR: Docker is not available. Please install and start Docker.")
+        exit(1)
 
-    print("QLever benchmark starting (native binaries)...")
-    print(f"  Port: {QLEVER_PORT}")
+    # Check if QLever image is available
+    rc, stdout, _ = docker_run(["images", "-q", QLEVER_IMAGE])
+    if not stdout.strip():
+        print(f"Pulling QLever Docker image ({QLEVER_IMAGE})...")
+        docker_run(["pull", QLEVER_IMAGE], timeout=600)
+
+    print("QLever benchmark starting...")
+    print(f"  Image:  {QLEVER_IMAGE}")
+    print(f"  Port:   {QLEVER_PORT}")
 
     def save_results():
         results_dir = os.path.join(os.path.dirname(__file__), "..", "results")
@@ -392,6 +405,8 @@ if __name__ == "__main__":
         with open(os.path.join(results_dir, "results_qlever.json"), "w") as f:
             json.dump(RESULTS, f, indent=2)
         print(f"\nResults saved to results/results_qlever.json ({len(RESULTS)} entries)")
+
+    MEM.start()
 
     for scale in ["medium", "large", "xlarge"]:
         ttl_path = os.path.join(DATA_DIR, f"{scale}.ttl")
@@ -401,9 +416,11 @@ if __name__ == "__main__":
             print(f"\n  Skipping {scale} — {ttl_path} not found")
             continue
 
+        MEM.reset()
         try:
             server_ready = bench_io(scale, ttl_path, nt_path)
             bench_queries(server_ready, scale)
+            RESULTS.append({"framework": "qlever", "scale": scale, "operation": "peak_memory", "seconds": None, "peak_mb": MEM.peak_mb})
         except Exception as e:
             print(f"\n  ERROR on {scale}: {e}")
             print("  Saving partial results and continuing...")

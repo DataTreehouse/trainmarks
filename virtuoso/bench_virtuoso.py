@@ -39,6 +39,11 @@ VIRTUOSO_IMAGE = "openlink/virtuoso-opensource-7:latest"
 VIRTUOSO_HTTP_PORT = 8891   # Non-standard to avoid conflicts
 VIRTUOSO_ISQL_PORT = 1112   # Non-standard to avoid conflicts
 CONTAINER_NAME = "virtuoso-bench"
+
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from docker_mem import ContainerMemSampler  # noqa: E402
+MEM = ContainerMemSampler(CONTAINER_NAME)
 DBA_PASSWORD = "benchpass"
 GRAPH_IRI = "http://benchmark.example/graph"
 
@@ -411,6 +416,8 @@ if __name__ == "__main__":
             json.dump(RESULTS, f, indent=2)
         print(f"\nResults saved to results/results_virtuoso.json ({len(RESULTS)} entries)")
 
+    MEM.start()
+
     for scale in ["medium", "large", "xlarge"]:
         ttl_path = os.path.join(DATA_DIR, f"{scale}.ttl")
         nt_path = os.path.join(DATA_DIR, f"{scale}.nt")
@@ -419,6 +426,7 @@ if __name__ == "__main__":
             print(f"\n  Skipping {scale} — {ttl_path} not found")
             continue
 
+        MEM.reset()
         try:
             server_ready = bench_io(scale, ttl_path, nt_path)
             bench_queries(server_ready, scale)
@@ -426,7 +434,8 @@ if __name__ == "__main__":
             print(f"\n  ERROR on {scale}: {e}")
             print("  Saving partial results and continuing...")
         finally:
-            # Clean up between scales and save partial results
+            # Record peak memory even if a query raised (e.g. Q6), then clean up.
+            RESULTS.append({"framework": "virtuoso", "scale": scale, "operation": "peak_memory", "seconds": None, "peak_mb": MEM.peak_mb})
             stop_virtuoso()
             save_results()
             gc.collect()

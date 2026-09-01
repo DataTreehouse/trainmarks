@@ -397,16 +397,17 @@
 <!-- ════════════ FRAMEWORKS ════════════ -->
 <section>
   <h2>Frameworks</h2>
-  <p class="section-lead">Eleven configurations spanning four languages and multiple execution models.</p>
+  <p class="section-lead">Thirteen configurations spanning five languages and multiple execution models. Every result also records peak memory.</p>
   <div class="card">
     <table class="fw-table">
       <thead>
         <tr><th>Framework</th><th>Language</th><th>Engine</th><th>Version</th><th>License</th></tr>
       </thead>
       <tbody>
-        <tr><td>maplib</td><td>Python (Rust core)</td><td>Polars + Apache Arrow, in-memory</td><td>0.20.25</td><td>Apache 2.0</td></tr>
-        <tr><td>maplib (disk) *</td><td>Python (Rust core)</td><td>Polars + Apache Arrow, disk-backed storage</td><td>0.20.25</td><td>Proprietary</td></tr>
-        <tr><td>oxigraph</td><td>Python (Rust core)</td><td>SPOG indexes, disk-backed store (RocksDB)</td><td>0.5.9</td><td>MIT / Apache 2.0</td></tr>
+        <tr><td>maplib</td><td>Python (Rust core)</td><td>Polars + Apache Arrow, in-memory</td><td>0.20.29</td><td>Apache 2.0</td></tr>
+        <tr><td>maplib (disk) *</td><td>Python (Rust core)</td><td>Polars + Apache Arrow, disk-backed storage</td><td>0.20.29</td><td>Proprietary</td></tr>
+        <tr><td>oxigraph</td><td>Python (Rust core)</td><td>SPOG indexes, in-memory (RocksDB engine, no path)</td><td>0.5.9</td><td>MIT / Apache 2.0</td></tr>
+        <tr><td>oxigraph (disk)</td><td>Python (Rust core)</td><td>Disk-backed RocksDB (on-disk path)</td><td>0.5.9</td><td>MIT / Apache 2.0</td></tr>
         <tr><td>rdflib</td><td>Python (pure)</td><td>In-memory dict-of-dicts</td><td>7.6.0</td><td>BSD 3-Clause</td></tr>
         <tr><td>Jena</td><td>Java</td><td>In-memory Model</td><td>6.1.0</td><td>Apache 2.0</td></tr>
         <tr><td>RDF4J</td><td>Java</td><td>MemoryStore SAIL</td><td>6.0.0</td><td>EDL 1.0</td></tr>
@@ -416,6 +417,7 @@
         <tr><td>GraphDB</td><td>Java (Docker)</td><td>RDF4J-based triplestore, on-disk persistence</td><td>10.8.0</td><td>Proprietary (free tier)</td></tr>
         <tr><td>dotNetRDF</td><td>C# (Docker)</td><td>In-memory TripleStore, Leviathan SPARQL engine</td><td>3.5.2</td><td>MIT</td></tr>
         <tr><td>Neo4j + n10s</td><td>Java (Docker)</td><td>Native property graph with neosemantics RDF import</td><td>5.26 + n10s 5.26.0</td><td>GPL v3 (Community)</td></tr>
+        <tr><td>TentrisDB †</td><td>C++ (Docker)</td><td>Tensor-based, disk-based, worst-case-optimal joins</td><td>latest (beta)</td><td>Proprietary (free tier)</td></tr>
       </tbody>
     </table>
     <p style="font-size:0.82rem;color:var(--stone-500);margin-top:0.8rem">
@@ -603,6 +605,7 @@
 
   <div class="chart-controls">
     <button class="toggle-log" id="io-log-toggle" onclick="toggleIOLog()">Log scale</button>
+    <button class="toggle-log" id="io-metric-toggle" onclick="toggleIOMetric()">Show memory</button>
   </div>
 
   <div class="chart-grid">
@@ -647,6 +650,7 @@
   <div class="chart-controls">
     <button class="toggle-log" id="query-log-toggle" onclick="toggleQueryLog()">Log scale</button>
     <button class="toggle-log" id="cold-toggle" onclick="toggleCold()">Warm (best of 3)</button>
+    <button class="toggle-log" id="query-metric-toggle" onclick="toggleQueryMetric()">Show memory</button>
   </div>
 
   <div class="chart-grid">
@@ -704,6 +708,43 @@
   </div>
 </section>
 
+<!-- ════════════ MEMORY ════════════ -->
+<section>
+  <h2>Memory Usage</h2>
+  <p class="section-lead">Peak memory during the benchmark. <strong>Three different bases, not directly comparable:</strong> Python engines report process RSS (psutil), Java engines report JVM heap used, and Docker engines report container memory (docker stats). Compare within a basis, and read absolute cross-language differences with caution.</p>
+  <div class="scale-tabs" id="mem-tabs">
+    <button class="scale-tab" onclick="switchMem('medium')">Medium · 100K</button>
+    <button class="scale-tab active" onclick="switchMem('large')">Large · 1M</button>
+    <button class="scale-tab" onclick="switchMem('xlarge')">XLarge · 10M</button>
+  </div>
+  <div class="chart-controls">
+    <button class="toggle-log" id="mem-log-toggle" onclick="toggleMemLog()">Log scale</button>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h4>Peak memory by engine (MB)</h4>
+      <div class="chart-wrap"><canvas id="chart-memory"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Peak memory across scales (MB)</h4>
+      <div class="chart-wrap"><canvas id="chart-scale-mem"></canvas></div>
+    </div>
+  </div>
+  <p class="section-lead" style="margin-top:1rem;font-size:0.8rem;">† TentrisDB is beta and runs here under linux/amd64 emulation on Apple silicon, so its timings are indicative only and not directly comparable to the natively-running engines (its memory figure is container memory).</p>
+</section>
+
+<!-- ════════════ OVERALL SUMMARY ════════════ -->
+<section>
+  <h2>Overall: Speed vs Memory</h2>
+  <p class="section-lead">One picture summing it all up. Each engine is a single point: the horizontal axis is its <strong>overall speed</strong> (geometric mean of every timed operation — I/O + all queries — across all three scales, lower/left = faster), and the vertical axis is its <strong>average peak memory</strong> across scales (lower/down = leaner). <strong>Bottom-left is the sweet spot: fast and light.</strong> Both axes are log. Memory bases differ by engine family (see above), so read cross-family memory distances with caution; Tentris is emulated.</p>
+  <div class="chart-grid">
+    <div class="chart-card" style="grid-column:1 / -1;">
+      <h4>Speed vs peak memory (per engine, aggregated over all tests)</h4>
+      <div class="chart-wrap" style="height:460px;"><canvas id="chart-summary"></canvas></div>
+    </div>
+  </div>
+</section>
+
 </div>
 
 <footer>
@@ -718,198 +759,340 @@
 const DATA = {
   maplib: {
     medium: {
-      read_turtle: 0.14661, write_turtle: 0.06684, read_ntriples: 0.07318, write_ntriples: 0.0115,
-      q1: 0.00356, q2: 0.00219, q3: 0.00285, q4: 0.00292, q5: 0.01001, q6: 0.00295,
-      q1_cold: 0.00356, q2_cold: 0.01551, q3_cold: 0.00522, q4_cold: 0.00639, q5_cold: 0.0124, q6_cold: 0.0089
+      read_turtle: 0.13882, write_turtle: 0.07881, read_ntriples: 0.07791, write_ntriples: 0.01272,
+      q1: 0.00347, q2: 0.00227, q3: 0.00295, q4: 0.00289, q5: 0.01008, q6: 0.00354,
+      q1_cold: 0.00234, q2_cold: 0.01528, q3_cold: 0.00525, q4_cold: 0.00681, q5_cold: 0.01195, q6_cold: 0.00903,
+      mem: 290.2
     },
     large: {
-      read_turtle: 0.78568, write_turtle: 0.16617, read_ntriples: 0.81957, write_ntriples: 0.08201,
-      q1: 0.01078, q2: 0.00399, q3: 0.00723, q4: 0.00528, q5: 0.01745, q6: 0.00508,
-      q1_cold: 0.01127, q2_cold: 0.00466, q3_cold: 0.00802, q4_cold: 0.00619, q5_cold: 0.01759, q6_cold: 0.00546
+      read_turtle: 0.81611, write_turtle: 0.18249, read_ntriples: 0.80637, write_ntriples: 0.08673,
+      q1: 0.01094, q2: 0.00397, q3: 0.00757, q4: 0.00582, q5: 0.02198, q6: 0.00585,
+      q1_cold: 0.0104, q2_cold: 0.0049, q3_cold: 0.00761, q4_cold: 0.0063, q5_cold: 0.02256, q6_cold: 0.00738,
+      mem: 1154.1
     },
     xlarge: {
-      read_turtle: 9.52863, write_turtle: 1.33969, read_ntriples: 9.35951, write_ntriples: 0.71679,
-      q1: 0.07324, q2: 0.01856, q3: 0.03985, q4: 0.03064, q5: 0.08071, q6: 0.0196,
-      q1_cold: 0.07401, q2_cold: 0.0196, q3_cold: 0.04171, q4_cold: 0.03277, q5_cold: 0.08276, q6_cold: 0.01923
-    },
-  },
-  oxigraph: {
-    medium: {
-      read_turtle: 0.14199, write_turtle: 0.03198, read_ntriples: 0.09832, write_ntriples: 0.0313,
-      q1: 0.00771, q2: 0.01223, q3: 0.00214, q4: 0.0104, q5: 0.00405, q6: 0.00055,
-      q1_cold: 0.00843, q2_cold: 0.01443, q3_cold: 0.00237, q4_cold: 0.01365, q5_cold: 0.00473, q6_cold: 0.00073
-    },
-    large: {
-      read_turtle: 1.3242, write_turtle: 0.32166, read_ntriples: 1.17969, write_ntriples: 0.31213,
-      q1: 0.07884, q2: 0.15672, q3: 0.0304, q4: 0.15256, q5: 0.05709, q6: 0.00625,
-      q1_cold: 0.08041, q2_cold: 0.15879, q3_cold: 0.03283, q4_cold: 0.16699, q5_cold: 0.06194, q6_cold: 0.00768
-    },
-    xlarge: {
-      read_turtle: 15.2532, write_turtle: 3.57687, read_ntriples: 13.1279, write_ntriples: 3.46427,
-      q1: 0.786, q2: 2.11307, q3: 0.39029, q4: 1.7165, q5: 0.75449, q6: 0.03461,
-      q1_cold: 0.7958, q2_cold: 2.21118, q3_cold: 0.38968, q4_cold: 1.75063, q5_cold: 0.77331, q6_cold: 0.03951
-    },
-  },
-  rdflib: {
-    medium: {
-      read_turtle: 1.71949, write_turtle: 1.14016, read_ntriples: 1.09295, write_ntriples: 0.17226,
-      q1: 0.35884, q2: 0.33025, q3: 0.05513, q4: 0.47249, q5: 0.07428, q6: 0.02562,
-      q1_cold: 0.46084, q2_cold: 0.33471, q3_cold: 0.05551, q4_cold: 0.47602, q5_cold: 0.07505, q6_cold: 0.02815
-    },
-    large: {
-      read_turtle: 18.5584, write_turtle: 12.2812, read_ntriples: 11.2627, write_ntriples: 1.74822,
-      q1: 3.63768, q2: 3.24926, q3: 0.65248, q4: 4.76189, q5: 0.8316, q6: 0.16258,
-      q1_cold: 3.64961, q2_cold: 3.24819, q3_cold: 0.65764, q4_cold: 4.78715, q5_cold: 0.83564, q6_cold: 0.16338
-    },
-    xlarge: {
-      read_turtle: 191.585, write_turtle: 134.717, read_ntriples: 154.582, write_ntriples: 17.5094,
-      q1: 37.0284, q2: 32.6759, q3: 7.59513, q4: 48.0879, q5: 9.00212, q6: 0.78661,
-      q1_cold: 38.1012, q2_cold: 32.8229, q3_cold: 7.62199, q4_cold: 48.6312, q5_cold: 9.03516, q6_cold: 0.80851
-    },
-  },
-  jena: {
-    medium: {
-      read_turtle: 0.1781, write_turtle: 0.1482, read_ntriples: 0.1508, write_ntriples: 0.0745,
-      q1: 0.0158, q2: 0.0275, q3: 0.0049, q4: 0.0293, q5: 0.0042, q6: 0.0015,
-      q1_cold: 0.1026, q2_cold: 0.145, q3_cold: 0.0071, q4_cold: 0.0668, q5_cold: 0.0133, q6_cold: 0.0101
-    },
-    large: {
-      read_turtle: 1.5144, write_turtle: 0.7428, read_ntriples: 1.3516, write_ntriples: 0.4125,
-      q1: 0.1608, q2: 0.2771, q3: 0.0307, q4: 0.2601, q5: 0.035, q6: 0.0058,
-      q1_cold: 0.2092, q2_cold: 0.2801, q3_cold: 0.0372, q4_cold: 0.3174, q5_cold: 0.0458, q6_cold: 0.0086
-    },
-    xlarge: {
-      read_turtle: 16.7159, write_turtle: 6.7366, read_ntriples: 16.4872, write_ntriples: 3.8937,
-      q1: 1.8365, q2: 3.2779, q3: 0.3293, q4: 3.0858, q5: 0.3766, q6: 0.0282,
-      q1_cold: 2.222, q2_cold: 3.3817, q3_cold: 0.346, q4_cold: 3.5452, q5_cold: 0.4073, q6_cold: 0.0578
-    },
-  },
-  rdf4j: {
-    medium: {
-      read_turtle: 0.2294, write_turtle: 0.2833, read_ntriples: 0.1315, write_ntriples: 0.1807,
-      q1: 0.006, q2: 0.016, q3: 0.0056, q4: 0.0246, q5: 0.0123, q6: 0.0024,
-      q1_cold: 0.0604, q2_cold: 0.0442, q3_cold: 0.0074, q4_cold: 0.0282, q5_cold: 0.0183, q6_cold: 0.0103
-    },
-    large: {
-      read_turtle: 2.5348, write_turtle: 1.9185, read_ntriples: 1.3941, write_ntriples: 1.6446,
-      q1: 0.0497, q2: 0.0614, q3: 0.0127, q4: 0.0735, q5: 0.0173, q6: 0.005,
-      q1_cold: 0.0862, q2_cold: 0.0701, q3_cold: 0.0141, q4_cold: 0.0764, q5_cold: 0.0297, q6_cold: 0.0077
-    },
-    xlarge: {
-      read_turtle: 24.8953, write_turtle: 19.3418, read_ntriples: 13.8812, write_ntriples: 13.176,
-      q1: 0.6783, q2: 0.9001, q3: 0.1653, q4: 1.1611, q5: 0.2685, q6: 0.0221,
-      q1_cold: 0.7156, q2_cold: 0.9932, q3_cold: 0.1955, q4_cold: 1.1847, q5_cold: 0.3487, q6_cold: 0.0398
-    },
-  },
-  qlever: {
-    medium: {
-      read_turtle: 0.2994, write_turtle: null, read_ntriples: 0.2903, write_ntriples: null,
-      q1: 0.00217, q2: 0.00619, q3: 0.01071, q4: 0.00722, q5: 0.01267, q6: null,
-      q1_cold: 0.0028, q2_cold: 0.01462, q3_cold: 0.02013, q4_cold: 0.01306, q5_cold: 0.01464, q6_cold: null
-    },
-    large: {
-      read_turtle: 1.26716, write_turtle: null, read_ntriples: 1.09305, write_ntriples: null,
-      q1: 0.00214, q2: 0.00302, q3: 0.00661, q4: 0.0035, q5: 0.05372, q6: null,
-      q1_cold: 0.00294, q2_cold: 0.03975, q3_cold: 0.01963, q4_cold: 0.03294, q5_cold: 0.05847, q6_cold: null
-    },
-    xlarge: {
-      read_turtle: 8.75283, write_turtle: null, read_ntriples: 8.64465, write_ntriples: null,
-      q1: 0.00192, q2: 0.00233, q3: 0.0049, q4: 0.00268, q5: 0.59221, q6: null,
-      q1_cold: 0.00282, q2_cold: 0.22576, q3_cold: 0.09768, q4_cold: 0.30261, q5_cold: 0.65208, q6_cold: null
-    },
-  },
-  virtuoso: {
-    medium: {
-      read_turtle: 0.61856, write_turtle: null, read_ntriples: 1.01978, write_ntriples: null,
-      q1: 0.00163, q2: 0.00253, q3: 0.00273, q4: 0.01228, q5: 0.02079, q6: null,
-      q1_cold: 0.00222, q2_cold: 0.03357, q3_cold: 0.03036, q4_cold: 0.01797, q5_cold: 0.02315, q6_cold: null
-    },
-    large: {
-      read_turtle: 1.94589, write_turtle: null, read_ntriples: 6.63785, write_ntriples: null,
-      q1: 0.00554, q2: 0.01939, q3: 0.00698, q4: 0.14324, q5: 0.22066, q6: null,
-      q1_cold: 0.00584, q2_cold: 0.10892, q3_cold: 0.07987, q4_cold: 0.16249, q5_cold: 0.23077, q6_cold: null
-    },
-    xlarge: {
-      read_turtle: 14.4108, write_turtle: null, read_ntriples: 77.2194, write_ntriples: null,
-      q1: 0.05497, q2: 0.04938, q3: 0.13531, q4: 1.92298, q5: 2.83405, q6: null,
-      q1_cold: 0.0556, q2_cold: 0.32181, q3_cold: 0.23663, q4_cold: 2.10042, q5_cold: 2.89275, q6_cold: null
+      read_turtle: 9.53024, write_turtle: 1.5129, read_ntriples: 9.26708, write_ntriples: 0.89571,
+      q1: 0.07705, q2: 0.01788, q3: 0.04077, q4: 0.0327, q5: 0.08067, q6: 0.01999,
+      q1_cold: 0.07617, q2_cold: 0.01955, q3_cold: 0.04077, q4_cold: 0.03387, q5_cold: 0.08696, q6_cold: 0.01965,
+      mem: 4879.1
     },
   },
   maplib_disk: {
     medium: {
-      read_turtle: 0.41423, write_turtle: 0.29987, read_ntriples: 0.35093, write_ntriples: 0.09129,
-      q1: 0.05865, q2: 0.00672, q3: 0.01889, q4: 0.01559, q5: 0.07817, q6: 0.03568,
-      q1_cold: 0.06443, q2_cold: 0.00722, q3_cold: 0.02063, q4_cold: 0.01624, q5_cold: 0.08548, q6_cold: 0.03475
+      read_turtle: 0.40963, write_turtle: 0.27829, read_ntriples: 0.33286, write_ntriples: 0.08589,
+      q1: 0.05507, q2: 0.00618, q3: 0.01834, q4: 0.01523, q5: 0.07705, q6: 0.03206,
+      q1_cold: 0.05701, q2_cold: 0.00613, q3_cold: 0.01925, q4_cold: 0.01549, q5_cold: 0.08677, q6_cold: 0.03257,
+      mem: 366.1
     },
     large: {
-      read_turtle: 1.3964, write_turtle: 0.45825, read_ntriples: 1.36012, write_ntriples: 0.22811,
-      q1: 0.0677, q2: 0.00846, q3: 0.02483, q4: 0.01914, q5: 0.09836, q6: 0.03909,
-      q1_cold: 0.07338, q2_cold: 0.00974, q3_cold: 0.0246, q4_cold: 0.02045, q5_cold: 0.10425, q6_cold: 0.04127
+      read_turtle: 1.36463, write_turtle: 0.41928, read_ntriples: 1.3515, write_ntriples: 0.22192,
+      q1: 0.06353, q2: 0.00804, q3: 0.02225, q4: 0.0178, q5: 0.09618, q6: 0.03379,
+      q1_cold: 0.06896, q2_cold: 0.01025, q3_cold: 0.02354, q4_cold: 0.01841, q5_cold: 0.10346, q6_cold: 0.0467,
+      mem: 1352.7
     },
     xlarge: {
-      read_turtle: 13.2126, write_turtle: 5.10633, read_ntriples: 12.0694, write_ntriples: 1.35551,
-      q1: 0.14295, q2: 0.02298, q3: 0.05915, q4: 0.04801, q5: 0.2302, q6: 0.04345,
-      q1_cold: 0.14527, q2_cold: 0.02258, q3_cold: 0.05712, q4_cold: 0.05289, q5_cold: 0.23314, q6_cold: 0.04545
+      read_turtle: 12.9164, write_turtle: 4.87763, read_ntriples: 12.5047, write_ntriples: 1.34779,
+      q1: 0.1364, q2: 0.02224, q3: 0.05659, q4: 0.04562, q5: 0.22359, q6: 0.04251,
+      q1_cold: 0.14316, q2_cold: 0.02363, q3_cold: 0.05968, q4_cold: 0.04722, q5_cold: 0.23502, q6_cold: 0.04414,
+      mem: 6058.4
+    },
+  },
+  oxigraph: {
+    medium: {
+      read_turtle: 0.11682, write_turtle: 0.0297, read_ntriples: 0.09536, write_ntriples: 0.02779,
+      q1: 0.00779, q2: 0.01165, q3: 0.00197, q4: 0.01028, q5: 0.00361, q6: 0.00051,
+      q1_cold: 0.01135, q2_cold: 0.01237, q3_cold: 0.00241, q4_cold: 0.01207, q5_cold: 0.00436, q6_cold: 0.00164,
+      mem: 109.4
+    },
+    large: {
+      read_turtle: 1.25295, write_turtle: 0.28716, read_ntriples: 1.11608, write_ntriples: 0.28786,
+      q1: 0.07985, q2: 0.13734, q3: 0.02913, q4: 0.15479, q5: 0.04964, q6: 0.0051,
+      q1_cold: 0.08012, q2_cold: 0.15193, q3_cold: 0.03113, q4_cold: 0.15699, q5_cold: 0.05635, q6_cold: 0.00592,
+      mem: 837.3
+    },
+    xlarge: {
+      read_turtle: 14.4614, write_turtle: 3.1908, read_ntriples: 13.5923, write_ntriples: 3.24277,
+      q1: 0.80238, q2: 1.88301, q3: 0.3726, q4: 1.67638, q5: 0.70183, q6: 0.03304,
+      q1_cold: 1.1487, q2_cold: 1.96356, q3_cold: 0.38981, q4_cold: 1.72532, q5_cold: 0.77225, q6_cold: 0.06553,
+      mem: 7445.4
+    },
+  },
+  oxigraph_disk: {
+    medium: {
+      read_turtle: 0.33776, write_turtle: 0.1686, read_ntriples: 0.31496, write_ntriples: 0.16811,
+      q1: 0.01473, q2: 0.03512, q3: 0.0063, q4: 0.02512, q5: 0.01481, q6: 0.00176,
+      q1_cold: 0.01484, q2_cold: 0.03725, q3_cold: 0.00655, q4_cold: 0.02596, q5_cold: 0.01581, q6_cold: 0.00195,
+      mem: 185.8
+    },
+    large: {
+      read_turtle: 5.497, write_turtle: 2.25837, read_ntriples: 5.08737, write_ntriples: 2.25747,
+      q1: 0.15056, q2: 0.43085, q3: 0.0855, q4: 0.33395, q5: 0.22728, q6: 0.02087,
+      q1_cold: 0.15333, q2_cold: 0.44391, q3_cold: 0.08642, q4_cold: 0.3477, q5_cold: 0.22603, q6_cold: 0.02506,
+      mem: 1413.3
+    },
+    xlarge: {
+      read_turtle: 81.7829, write_turtle: 29.1345, read_ntriples: 79.243, write_ntriples: 28.6283,
+      q1: 1.54491, q2: 5.72678, q3: 1.19913, q4: 4.63912, q5: 3.10957, q6: 0.10596,
+      q1_cold: 1.58809, q2_cold: 5.81843, q3_cold: 1.24279, q4_cold: 4.68579, q5_cold: 3.24016, q6_cold: 0.10732,
+      mem: 9683.2
+    },
+  },
+  rdflib: {
+    medium: {
+      read_turtle: 1.66718, write_turtle: 1.11514, read_ntriples: 1.08272, write_ntriples: 0.15955,
+      q1: 0.35405, q2: 0.32851, q3: 0.05583, q4: 0.47803, q5: 0.0738, q6: 0.02522,
+      q1_cold: 0.41446, q2_cold: 0.33345, q3_cold: 0.05551, q4_cold: 0.47906, q5_cold: 0.07419, q6_cold: 0.02777,
+      mem: 287.9
+    },
+    large: {
+      read_turtle: 18.2637, write_turtle: 12.3064, read_ntriples: 11.427, write_ntriples: 1.67584,
+      q1: 3.5386, q2: 3.23351, q3: 0.65647, q4: 4.82702, q5: 0.83266, q6: 0.16229,
+      q1_cold: 3.53129, q2_cold: 3.26239, q3_cold: 0.65514, q4_cold: 4.8275, q5_cold: 0.83557, q6_cold: 0.16491,
+      mem: 2577.8
+    },
+    xlarge: {
+      read_turtle: 191.229, write_turtle: 135.297, read_ntriples: 174.523, write_ntriples: 17.6689,
+      q1: 36.4789, q2: 32.8916, q3: 8.58468, q4: 55.1591, q5: 10.1177, q6: 0.89027,
+      q1_cold: 37.912, q2_cold: 33.0063, q3_cold: 8.63874, q4_cold: 55.0659, q5_cold: 10.1663, q6_cold: 0.9198,
+      mem: 12717.5
+    },
+  },
+  jena: {
+    medium: {
+      read_turtle: 0.1491, write_turtle: 0.15, read_ntriples: 0.1532, write_ntriples: 0.095,
+      q1: 0.0157, q2: 0.0329, q3: 0.0055, q4: 0.036, q5: 0.0047, q6: 0.0021,
+      q1_cold: 0.1109, q2_cold: 0.1492, q3_cold: 0.0089, q4_cold: 0.0694, q5_cold: 0.0121, q6_cold: 0.011,
+      mem: 164.7
+    },
+    large: {
+      read_turtle: 1.598, write_turtle: 0.8279, read_ntriples: 1.453, write_ntriples: 0.4174,
+      q1: 0.1891, q2: 0.2913, q3: 0.0302, q4: 0.2816, q5: 0.0371, q6: 0.007,
+      q1_cold: 0.2168, q2_cold: 0.2917, q3_cold: 0.0329, q4_cold: 0.3036, q5_cold: 0.0488, q6_cold: 0.0091,
+      mem: 2193.4
+    },
+    xlarge: {
+      read_turtle: 17.5071, write_turtle: 7.2836, read_ntriples: 17.4286, write_ntriples: 4.1574,
+      q1: 2.0643, q2: 3.4929, q3: 0.3602, q4: 3.3564, q5: 0.4158, q6: 0.034,
+      q1_cold: 2.3018, q2_cold: 3.5296, q3_cold: 0.3745, q4_cold: 3.7515, q5_cold: 0.4361, q6_cold: 0.0575,
+      mem: 6825.9
+    },
+  },
+  rdf4j: {
+    medium: {
+      read_turtle: 0.2621, write_turtle: 0.2904, read_ntriples: 0.1437, write_ntriples: 0.202,
+      q1: 0.0065, q2: 0.0224, q3: 0.0073, q4: 0.0214, q5: 0.0119, q6: 0.0028,
+      q1_cold: 0.0628, q2_cold: 0.0475, q3_cold: 0.0091, q4_cold: 0.0348, q5_cold: 0.0188, q6_cold: 0.0107,
+      mem: 364.6
+    },
+    large: {
+      read_turtle: 2.8875, write_turtle: 2.2243, read_ntriples: 1.4362, write_ntriples: 1.8879,
+      q1: 0.0551, q2: 0.0639, q3: 0.0119, q4: 0.0779, q5: 0.0224, q6: 0.0051,
+      q1_cold: 0.091, q2_cold: 0.066, q3_cold: 0.0152, q4_cold: 0.0849, q5_cold: 0.041, q6_cold: 0.0068,
+      mem: 3114.4
+    },
+    xlarge: {
+      read_turtle: 28.2275, write_turtle: 21.896, read_ntriples: 15.8067, write_ntriples: 14.3676,
+      q1: 0.7752, q2: 0.9282, q3: 0.2083, q4: 1.2547, q5: 0.3025, q6: 0.0265,
+      q1_cold: 0.7906, q2_cold: 0.9612, q3_cold: 0.1947, q4_cold: 1.2777, q5_cold: 0.2968, q6_cold: 0.0345,
+      mem: 7258.7
+    },
+  },
+  qlever: {
+    medium: {
+      read_turtle: 0.60094, write_turtle: null, read_ntriples: 0.55171, write_ntriples: null,
+      q1: 0.0018, q2: 0.00658, q3: 0.0122, q4: 0.00886, q5: 0.01267, q6: null,
+      q1_cold: 0.00178, q2_cold: 0.01338, q3_cold: 0.02153, q4_cold: 0.01517, q5_cold: 0.01682, q6_cold: null,
+      mem: null
+    },
+    large: {
+      read_turtle: 1.23909, write_turtle: null, read_ntriples: 1.07142, write_ntriples: null,
+      q1: 0.00179, q2: 0.00308, q3: 0.00679, q4: 0.00436, q5: 0.03513, q6: null,
+      q1_cold: 0.00233, q2_cold: 0.02605, q3_cold: 0.02109, q4_cold: 0.03667, q5_cold: 0.03971, q6_cold: null,
+      mem: 61.5
+    },
+    xlarge: {
+      read_turtle: 6.22113, write_turtle: null, read_ntriples: 6.44651, write_ntriples: null,
+      q1: 0.00242, q2: 0.00223, q3: 0.00583, q4: 0.00274, q5: 0.30415, q6: null,
+      q1_cold: 0.00308, q2_cold: 0.16451, q3_cold: 0.09362, q4_cold: 0.32497, q5_cold: 0.38876, q6_cold: null,
+      mem: 1858.6
+    },
+  },
+  virtuoso: {
+    medium: {
+      read_turtle: 0.69149, write_turtle: null, read_ntriples: 1.1004, write_ntriples: null,
+      q1: 0.00232, q2: 0.00326, q3: 0.00357, q4: 0.01492, q5: 0.0244, q6: null,
+      q1_cold: 0.00303, q2_cold: 0.03702, q3_cold: 0.03419, q4_cold: 0.01986, q5_cold: 0.02675, q6_cold: null,
+      mem: 294.1
+    },
+    large: {
+      read_turtle: 2.04384, write_turtle: null, read_ntriples: 7.42944, write_ntriples: null,
+      q1: 0.00694, q2: 0.02136, q3: 0.00733, q4: 0.16092, q5: 0.25153, q6: null,
+      q1_cold: 0.0075, q2_cold: 0.12136, q3_cold: 0.08893, q4_cold: 0.19207, q5_cold: 0.26311, q6_cold: null,
+      mem: 764.8
+    },
+    xlarge: {
+      read_turtle: 15.8043, write_turtle: null, read_ntriples: 78.9403, write_ntriples: null,
+      q1: 0.03893, q2: 0.02887, q3: 0.00155, q4: 0.00139, q5: null, q6: null,
+      q1_cold: 0.04095, q2_cold: 0.29807, q3_cold: 0.10304, q4_cold: 0.03607, q5_cold: null, q6_cold: null,
+      mem: 2797.6
     },
   },
   graphdb: {
     medium: {
-      read_turtle: 4.25319, write_turtle: null, read_ntriples: 3.61516, write_ntriples: null,
-      q1: 0.02012, q2: 0.0337, q3: 0.00982, q4: 0.02669, q5: 0.04617, q6: 0.01717,
-      q1_cold: 0.03335, q2_cold: 0.0864, q3_cold: 0.02241, q4_cold: 0.04145, q5_cold: 0.08378, q6_cold: 0.04874
+      read_turtle: 4.42348, write_turtle: null, read_ntriples: 3.61006, write_ntriples: null,
+      q1: 0.02188, q2: 0.03368, q3: 0.01826, q4: 0.03759, q5: 0.05693, q6: 0.02619,
+      q1_cold: 0.03351, q2_cold: 0.0991, q3_cold: 0.03421, q4_cold: 0.05619, q5_cold: 0.10607, q6_cold: 0.0596,
+      mem: 2650.1
     },
     large: {
-      read_turtle: 7.6936, write_turtle: null, read_ntriples: 6.62626, write_ntriples: null,
-      q1: 0.13596, q2: 0.20317, q3: 0.04392, q4: 0.2246, q5: 0.39309, q6: 0.04291,
-      q1_cold: 0.1379, q2_cold: 0.23682, q3_cold: 0.05036, q4_cold: 0.24083, q5_cold: 0.46701, q6_cold: 0.05503
+      read_turtle: 8.67907, write_turtle: null, read_ntriples: 7.63868, write_ntriples: null,
+      q1: 0.15679, q2: 0.24267, q3: 0.05345, q4: 0.27856, q5: 0.4614, q6: 0.0508,
+      q1_cold: 0.16903, q2_cold: 0.29446, q3_cold: 0.05691, q4_cold: 0.28534, q5_cold: 0.48279, q6_cold: 0.0592,
+      mem: 4085.8
     },
     xlarge: {
-      read_turtle: 57.10155, write_turtle: null, read_ntriples: 54.21408, write_ntriples: null,
-      q1: 1.41396, q2: 2.85927, q3: 0.61569, q4: 3.65596, q5: 4.37698, q6: 0.17386,
-      q1_cold: 1.45804, q2_cold: 2.91928, q3_cold: 0.61779, q4_cold: 4.08174, q5_cold: 4.71662, q6_cold: 0.17299
+      read_turtle: 66.258, write_turtle: null, read_ntriples: 61.2889, write_ntriples: null,
+      q1: 1.5289, q2: 2.90657, q3: 0.74487, q4: 3.83966, q5: 4.33676, q6: 0.19302,
+      q1_cold: 1.60517, q2_cold: 3.43403, q3_cold: 0.76867, q4_cold: 4.04987, q5_cold: 4.46187, q6_cold: 0.19833,
+      mem: 5154.8
     },
   },
   dotnetrdf: {
     medium: {
-      read_turtle: 1.40573, write_turtle: 0.29157, read_ntriples: 0.83659, write_ntriples: 0.39582,
-      q1: 0.05633, q2: 0.08191, q3: 0.0336, q4: 0.09573, q5: 0.02044, q6: 0.00461,
-      q1_cold: 0.128, q2_cold: 0.11437, q3_cold: 0.03779, q4_cold: 0.09594, q5_cold: 0.02459, q6_cold: 0.02239
+      read_turtle: 1.5714, write_turtle: 0.33444, read_ntriples: 0.93198, write_ntriples: 0.48178,
+      q1: 0.06446, q2: 0.08866, q3: 0.03757, q4: 0.10129, q5: 0.02259, q6: 0.00492,
+      q1_cold: 0.16506, q2_cold: 0.14489, q3_cold: 0.03988, q4_cold: 0.11157, q5_cold: 0.02568, q6_cold: 0.02426,
+      mem: 5953.5
     },
     large: {
-      read_turtle: 9.29823, write_turtle: 2.35351, read_ntriples: 8.72216, write_ntriples: 1.87052,
-      q1: 0.66369, q2: 0.85972, q3: 0.44538, q4: 0.89082, q5: 0.32383, q6: 0.08127,
-      q1_cold: 0.75637, q2_cold: 0.88351, q3_cold: 0.45049, q4_cold: 1.01474, q5_cold: 0.35684, q6_cold: 0.1415
+      read_turtle: 10.6067, write_turtle: 2.6346, read_ntriples: 9.63852, write_ntriples: 2.05832,
+      q1: 0.62863, q2: 0.83862, q3: 0.47864, q4: 0.96285, q5: 0.3706, q6: 0.08735,
+      q1_cold: 0.75467, q2_cold: 0.85767, q3_cold: 0.47855, q4_cold: 0.97754, q5_cold: 0.37887, q6_cold: 0.16063,
+      mem: 5953.5
     },
     xlarge: {
       read_turtle: null, write_turtle: null, read_ntriples: null, write_ntriples: null,
       q1: null, q2: null, q3: null, q4: null, q5: null, q6: null,
-      q1_cold: null, q2_cold: null, q3_cold: null, q4_cold: null, q5_cold: null, q6_cold: null
+      q1_cold: null, q2_cold: null, q3_cold: null, q4_cold: null, q5_cold: null, q6_cold: null,
+      mem: 5953.5
     },
   },
   neo4j: {
     medium: {
-      read_turtle: 1.27474, write_turtle: null, read_ntriples: 0.52952, write_ntriples: null,
-      q1: 0.00414, q2: 0.01878, q3: 0.00715, q4: 0.00509, q5: null, q6: null,
-      q1_cold: 0.0205, q2_cold: 0.14624, q3_cold: 0.09389, q4_cold: 0.06415, q5_cold: null, q6_cold: null
+      read_turtle: 1.29928, write_turtle: null, read_ntriples: 0.56269, write_ntriples: null,
+      q1: 0.00447, q2: 0.02246, q3: 0.00804, q4: 0.00576, q5: null, q6: null,
+      q1_cold: 0.02141, q2_cold: 0.16908, q3_cold: 0.10462, q4_cold: 0.07888, q5_cold: null, q6_cold: null,
+      mem: 4638.7
     },
     large: {
-      read_turtle: 6.63697, write_turtle: null, read_ntriples: 5.38454, write_ntriples: null,
-      q1: 0.00459, q2: 0.0796, q3: 0.03157, q4: 0.00635, q5: null, q6: null,
-      q1_cold: 0.02791, q2_cold: 0.27629, q3_cold: 0.13027, q4_cold: 0.08075, q5_cold: null, q6_cold: null
+      read_turtle: 7.32497, write_turtle: null, read_ntriples: 5.87844, write_ntriples: null,
+      q1: 0.00509, q2: 0.09145, q3: 0.03682, q4: 0.00746, q5: null, q6: null,
+      q1_cold: 0.02989, q2_cold: 0.31172, q3_cold: 0.14605, q4_cold: 0.08389, q5_cold: null, q6_cold: null,
+      mem: 4671.5
     },
     xlarge: {
-      read_turtle: 67.07065, write_turtle: null, read_ntriples: 52.18607, write_ntriples: null,
-      q1: 0.00533, q2: 0.83997, q3: 0.27838, q4: 0.0108, q5: null, q6: null,
-      q1_cold: 0.03315, q2_cold: 1.07162, q3_cold: 0.39504, q4_cold: 0.1129, q5_cold: null, q6_cold: null
+      read_turtle: 73.6766, write_turtle: null, read_ntriples: 58.3736, write_ntriples: null,
+      q1: 0.00487, q2: 0.97403, q3: 0.34484, q4: 0.01109, q5: null, q6: null,
+      q1_cold: 0.03096, q2_cold: 1.22466, q3_cold: 0.45458, q4_cold: 0.10906, q5_cold: null, q6_cold: null,
+      mem: 5226.5
+    },
+  },
+  tentris: {
+    medium: {
+      read_turtle: null, write_turtle: null, read_ntriples: 0.25903, write_ntriples: null,
+      q1: 0.00209, q2: 0.02338, q3: 0.01018, q4: 0.02335, q5: 0.00955, q6: null,
+      q1_cold: 0.00191, q2_cold: 0.02564, q3_cold: 0.0117, q4_cold: 0.02753, q5_cold: 0.01086, q6_cold: null,
+      mem: null
+    },
+    large: {
+      read_turtle: null, write_turtle: null, read_ntriples: 3.03982, write_ntriples: null,
+      q1: 0.0015, q2: 0.27587, q3: 0.11524, q4: 0.30515, q5: 0.07822, q6: null,
+      q1_cold: 0.00165, q2_cold: 0.28069, q3_cold: 0.11743, q4_cold: 0.3129, q5_cold: 0.08142, q6_cold: null,
+      mem: 430.8
+    },
+    xlarge: {
+      read_turtle: null, write_turtle: null, read_ntriples: 215.598, write_ntriples: null,
+      q1: 0.00138, q2: 4.40626, q3: 1.65008, q4: 4.98456, q5: 0.92245, q6: null,
+      q1_cold: 0.00246, q2_cold: 4.32902, q3_cold: 1.76795, q4_cold: 4.91545, q5_cold: 1.07404, q6_cold: null,
+      mem: 2739.2
     },
   },
 };
-const FW_ORDER = ['maplib', 'maplib_disk', 'oxigraph', 'rdflib', 'jena', 'rdf4j', 'qlever', 'virtuoso', 'graphdb', 'dotnetrdf', 'neo4j'];
+
+const MEMOPS = {
+  maplib: {
+    medium: { read_turtle: 168.6, write_turtle: 203.3, read_ntriples: 261.6, write_ntriples: 257.6, q1: 281.1, q2: 285.5, q3: 286.3, q4: 287.3, q5: 288.5, q6: 290.2 },
+    large: { read_turtle: 588.1, write_turtle: 985.2, read_ntriples: 1154.1, write_ntriples: 985.2, q1: 1058.2, q2: 1060.3, q3: 1061.6, q4: 1063.1, q5: 1068.7, q6: 1068.8 },
+    xlarge: { read_turtle: 3394.9, write_turtle: 3432.4, read_ntriples: 4879.1, write_ntriples: 3519.2, q1: 3884.7, q2: 3884.8, q3: 3884.8, q4: 3885.2, q5: 3902.2, q6: 3902.3 },
+  },
+  maplib_disk: {
+    medium: { read_turtle: 245.3, write_turtle: 304.4, read_ntriples: 358.4, write_ntriples: 324.4, q1: 357.6, q2: 362.3, q3: 362.9, q4: 363.9, q5: 364.6, q6: 366.1 },
+    large: { read_turtle: 800.9, write_turtle: 1179.2, read_ntriples: 1352.7, write_ntriples: 1189.1, q1: 1250.8, q2: 1252.5, q3: 1253.8, q4: 1255.9, q5: 1258.7, q6: 1258.8 },
+    xlarge: { read_turtle: 4549, write_turtle: 4271.1, read_ntriples: 6058.4, write_ntriples: 4175.2, q1: 4952.8, q2: 4953.2, q3: 4953.7, q4: 4955.8, q5: 4974.6, q6: 4974.6 },
+  },
+  oxigraph: {
+    medium: { read_turtle: 61.4, write_turtle: 71.3, read_ntriples: 71.6, write_ntriples: 71.5, q1: 105.9, q2: 106.3, q3: 106.8, q4: 107, q5: 109.2, q6: 109.4 },
+    large: { read_turtle: 398.1, write_turtle: 465.1, read_ntriples: 807.8, write_ntriples: 465.1, q1: 805.6, q2: 805.6, q3: 809.2, q4: 809.3, q5: 831.3, q6: 831.5 },
+    xlarge: { read_turtle: 4206.6, write_turtle: 4507.6, read_ntriples: 7379.5, write_ntriples: 4507.6, q1: 6898.7, q2: 6928.4, q3: 7016.8, q4: 7062.4, q5: 7401.1, q6: 7445.4 },
+  },
+  oxigraph_disk: {
+    medium: { read_turtle: 131.8, write_turtle: 135.9, read_ntriples: 163.3, write_ntriples: 135.9, q1: 180.6, q2: 181.1, q3: 181.5, q4: 183.4, q5: 185.2, q6: 185.8 },
+    large: { read_turtle: 999.5, write_turtle: 1002.9, read_ntriples: 1380.9, write_ntriples: 1003, q1: 1384.3, q2: 1384.3, q3: 1388.1, q4: 1398.3, q5: 1409.4, q6: 859.5 },
+    xlarge: { read_turtle: 9218.9, write_turtle: 3893.6, read_ntriples: 9683.2, write_ntriples: 3893.7, q1: 6601, q2: 6836.1, q3: 6921.1, q4: 6933.4, q5: 7873.8, q6: 7821.1 },
+  },
+  rdflib: {
+    medium: { read_turtle: 160.9, write_turtle: 181, read_ntriples: 287.9, write_ntriples: 181.1, q1: 202.4, q2: 202.9, q3: 203.6, q4: 204.4, q5: 207, q6: 207.1 },
+    large: { read_turtle: 1398.8, write_turtle: 1466.7, read_ntriples: 2577.8, write_ntriples: 1457.2, q1: 1460.5, q2: 1460.5, q3: 1471.3, q4: 1464, q5: 1494.5, q6: 1469 },
+    xlarge: { read_turtle: 11478.5, write_turtle: 12310.5, read_ntriples: 11917, write_ntriples: 12277.6, q1: 12533.3, q2: 12583.8, q3: 12278.2, q4: 12328.9, q5: 12518.9, q6: 12026.5 },
+  },
+  jena: {
+    medium: { read_turtle: 51.1, write_turtle: 136.5, read_ntriples: 164.7, write_ntriples: 137.5, q1: 130.7, q2: 137.8, q3: 85.4, q4: 146.2, q5: 73.2, q6: 75.6 },
+    large: { read_turtle: 507.7, write_turtle: 750.9, read_ntriples: 780, write_ntriples: 758.9, q1: 977.4, q2: 2093.4, q3: 2193.4, q4: 1470.9, q5: 1570.9, q6: 1590.9 },
+    xlarge: { read_turtle: 3786.4, write_turtle: 5038.4, read_ntriples: 5492.8, write_ntriples: 3624, q1: 5896.3, q2: 5892.3, q3: 5853.2, q4: 6825.9, q5: 6817.2, q6: 4599.9 },
+  },
+  rdf4j: {
+    medium: { read_turtle: 127.4, write_turtle: 116.2, read_ntriples: 364.6, write_ntriples: 264.6, q1: 172.4, q2: 200.4, q3: 208.4, q4: 240.4, q5: 256.4, q6: 263.7 },
+    large: { read_turtle: 1030.3, write_turtle: 1238.4, read_ntriples: 2550.4, write_ntriples: 3023.4, q1: 1266, q2: 1498, q3: 1570, q4: 1854, q5: 2006, q6: 2034 },
+    xlarge: { read_turtle: 4127.2, write_turtle: 5013.7, read_ntriples: 5225.7, write_ntriples: 5281.4, q1: 7114.7, q2: 6730.7, q3: 6974.7, q4: 6322.7, q5: 7258.7, q6: 3697.3 },
+  },
+  qlever: {
+    medium: { read_turtle: null, write_turtle: null, read_ntriples: null, write_ntriples: null, q1: null, q2: null, q3: null, q4: null, q5: null, q6: null },
+    large: { read_turtle: 61.5, write_turtle: 61.5, read_ntriples: 61.5, write_ntriples: 61.5, q1: 61.5, q2: 61.5, q3: 61.5, q4: 61.5, q5: 61.5, q6: 61.5 },
+    xlarge: { read_turtle: 1858.6, write_turtle: 1858.6, read_ntriples: 1858.6, write_ntriples: 1858.6, q1: 1858.6, q2: 1858.6, q3: 1858.6, q4: 1858.6, q5: 1858.6, q6: 1858.6 },
+  },
+  virtuoso: {
+    medium: { read_turtle: 294.1, write_turtle: 294.1, read_ntriples: 294.1, write_ntriples: 294.1, q1: 294.1, q2: 294.1, q3: 294.1, q4: 294.1, q5: 294.1, q6: 294.1 },
+    large: { read_turtle: 764.8, write_turtle: 764.8, read_ntriples: 764.8, write_ntriples: 764.8, q1: 764.8, q2: 764.8, q3: 764.8, q4: 764.8, q5: 764.8, q6: 764.8 },
+    xlarge: { read_turtle: 2797.6, write_turtle: 2797.6, read_ntriples: 2797.6, write_ntriples: 2797.6, q1: 2797.6, q2: 2797.6, q3: 2797.6, q4: 2797.6, q5: 2797.6, q6: 2797.6 },
+  },
+  graphdb: {
+    medium: { read_turtle: 2650.1, write_turtle: 2650.1, read_ntriples: 2650.1, write_ntriples: 2650.1, q1: 2650.1, q2: 2650.1, q3: 2650.1, q4: 2650.1, q5: 2650.1, q6: 2650.1 },
+    large: { read_turtle: 4085.8, write_turtle: 4085.8, read_ntriples: 4085.8, write_ntriples: 4085.8, q1: 4085.8, q2: 4085.8, q3: 4085.8, q4: 4085.8, q5: 4085.8, q6: 4085.8 },
+    xlarge: { read_turtle: 5154.8, write_turtle: 5154.8, read_ntriples: 5154.8, write_ntriples: 5154.8, q1: 5154.8, q2: 5154.8, q3: 5154.8, q4: 5154.8, q5: 5154.8, q6: 5154.8 },
+  },
+  dotnetrdf: {
+    medium: { read_turtle: 5953.5, write_turtle: 5953.5, read_ntriples: 5953.5, write_ntriples: 5953.5, q1: 5953.5, q2: 5953.5, q3: 5953.5, q4: 5953.5, q5: 5953.5, q6: 5953.5 },
+    large: { read_turtle: 5953.5, write_turtle: 5953.5, read_ntriples: 5953.5, write_ntriples: 5953.5, q1: 5953.5, q2: 5953.5, q3: 5953.5, q4: 5953.5, q5: 5953.5, q6: 5953.5 },
+    xlarge: { read_turtle: 5953.5, write_turtle: 5953.5, read_ntriples: 5953.5, write_ntriples: 5953.5, q1: 5953.5, q2: 5953.5, q3: 5953.5, q4: 5953.5, q5: 5953.5, q6: 5953.5 },
+  },
+  neo4j: {
+    medium: { read_turtle: 4638.7, write_turtle: 4638.7, read_ntriples: 4638.7, write_ntriples: 4638.7, q1: 4638.7, q2: 4638.7, q3: 4638.7, q4: 4638.7, q5: 4638.7, q6: 4638.7 },
+    large: { read_turtle: 4671.5, write_turtle: 4671.5, read_ntriples: 4671.5, write_ntriples: 4671.5, q1: 4671.5, q2: 4671.5, q3: 4671.5, q4: 4671.5, q5: 4671.5, q6: 4671.5 },
+    xlarge: { read_turtle: 5226.5, write_turtle: 5226.5, read_ntriples: 5226.5, write_ntriples: 5226.5, q1: 5226.5, q2: 5226.5, q3: 5226.5, q4: 5226.5, q5: 5226.5, q6: 5226.5 },
+  },
+  tentris: {
+    medium: { read_turtle: null, write_turtle: null, read_ntriples: null, write_ntriples: null, q1: null, q2: null, q3: null, q4: null, q5: null, q6: null },
+    large: { read_turtle: 430.8, write_turtle: 430.8, read_ntriples: 430.8, write_ntriples: 430.8, q1: 430.8, q2: 430.8, q3: 430.8, q4: 430.8, q5: 430.8, q6: 430.8 },
+    xlarge: { read_turtle: 2739.2, write_turtle: 2739.2, read_ntriples: 2739.2, write_ntriples: 2739.2, q1: 2739.2, q2: 2739.2, q3: 2739.2, q4: 2739.2, q5: 2739.2, q6: 2739.2 },
+  },
+};
+const FW_ORDER = ['maplib', 'maplib_disk', 'oxigraph', 'oxigraph_disk', 'rdflib', 'jena', 'rdf4j', 'qlever', 'virtuoso', 'graphdb', 'dotnetrdf', 'neo4j', 'tentris'];
 const FW_COLORS = {
   maplib:      '#2d6a4f',
   maplib_disk: '#52796f',
   graphdb:     '#ff6f00',
   oxigraph:    '#3b82f6',
+  oxigraph_disk: '#1e40af',
   rdflib:    '#a3a3a3',
   jena:      '#e85d3a',
   rdf4j:     '#eab308',
@@ -918,12 +1101,14 @@ const FW_COLORS = {
   virtuoso:  '#06b6d4',
   dotnetrdf: '#8b5cf6',
   neo4j:     '#018bff',
+  tentris:   '#d81b60',
 };
 const FW_LABELS = {
   maplib: 'maplib',
   maplib_disk: 'maplib (disk)',
   graphdb: 'GraphDB',
   oxigraph: 'oxigraph',
+  oxigraph_disk: 'oxigraph (disk)',
   rdflib: 'rdflib',
   jena: 'Jena',
   rdf4j: 'RDF4J',
@@ -932,11 +1117,13 @@ const FW_LABELS = {
   virtuoso: 'Virtuoso',
   dotnetrdf: 'dotNetRDF',
   neo4j:     'Neo4j + n10s',
+  tentris:   'TentrisDB †',
 };
 
 // ── State ──
 let currentIOScale = 'large';
 let currentQueryScale = 'large';
+let currentMemScale = 'large';
 let ioLogScale = false;
 let queryLogScale = false;
 const visibleFW = new Set(FW_ORDER);   // all visible by default
@@ -988,10 +1175,10 @@ function toggleFW(chip) {
 // ── Preset groups ──
 const PRESETS = {
   all:    FW_ORDER,
-  memory: ['maplib', 'rdflib', 'jena', 'rdf4j', 'dotnetrdf'],
-  disk:   ['maplib_disk', 'oxigraph', 'qlever', 'virtuoso', 'graphdb', 'neo4j'],
-  python: ['maplib', 'maplib_disk', 'oxigraph', 'rdflib'],
-  docker: ['qlever', 'virtuoso', 'graphdb', 'dotnetrdf', 'neo4j'],
+  memory: ['maplib', 'oxigraph', 'rdflib', 'jena', 'rdf4j', 'dotnetrdf'],
+  disk:   ['maplib_disk', 'oxigraph_disk', 'qlever', 'virtuoso', 'graphdb', 'neo4j', 'tentris'],
+  python: ['maplib', 'maplib_disk', 'oxigraph', 'oxigraph_disk', 'rdflib'],
+  docker: ['qlever', 'virtuoso', 'graphdb', 'dotnetrdf', 'neo4j', 'tentris'],
 };
 
 function applyPreset(name) {
@@ -1037,10 +1224,145 @@ function rebuildAll() {
   buildTable('io-table', IO_OPS, IO_LABELS, currentIOScale);
   buildTable('query-table', Q_OPS, Q_LABELS, currentQueryScale);
   buildScaleCharts();
+  buildMemoryCharts();
+  buildSummaryChart();
+}
+
+// ── Memory charts ──
+let memCharts = {};
+
+function switchMem(scale) {
+  currentMemScale = scale;
+  document.querySelectorAll('#mem-tabs .scale-tab').forEach(t => t.classList.remove('active'));
+  if (typeof event !== 'undefined' && event.target) event.target.classList.add('active');
+  buildMemoryCharts();
+}
+
+function makeMemBarChart(canvasId, labels, datasets, log) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => c.raw !== null ? `${c.dataset.label}: ${fmtMB(c.raw)}` : `${c.dataset.label}: N/A` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11, family: 'Inter' } } },
+        y: { type: log ? 'logarithmic' : 'linear',
+             title: { display: true, text: 'MB', font: { size: 11, family: 'Inter' } },
+             grid: { color: '#f0f0f0' },
+             ticks: { font: { size: 10, family: 'Inter' }, callback: v => v >= 1024 ? (v/1024).toFixed(1) + 'GB' : v + 'MB' } }
+      }
+    }
+  });
+}
+
+function makeMemLineChart(canvasId, scaleLabels, datasets, log) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: { labels: scaleLabels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { font: { size: 11, family: 'Inter' }, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: { callbacks: { label: c => c.raw !== null ? `${c.dataset.label}: ${fmtMB(c.raw)}` : `${c.dataset.label}: N/A` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11, family: 'Inter' } } },
+        y: { type: log ? 'logarithmic' : 'linear',
+             title: { display: true, text: 'MB', font: { size: 11, family: 'Inter' } },
+             grid: { color: '#f0f0f0' },
+             ticks: { font: { size: 10, family: 'Inter' }, callback: v => v >= 1024 ? (v/1024).toFixed(1) + 'GB' : v + 'MB' } }
+      }
+    }
+  });
+}
+
+function buildMemoryCharts() {
+  const fws = activeFW();
+  // Bar: peak memory per engine at the selected scale
+  const barData = fws.map(fw => ({
+    label: FW_LABELS[fw],
+    data: [DATA[fw]?.[currentMemScale]?.mem ?? null],
+    backgroundColor: FW_COLORS[fw], borderRadius: 4, barPercentage: 0.85,
+  }));
+  if (memCharts.bar) memCharts.bar.destroy();
+  memCharts.bar = makeMemBarChart('chart-memory', [''], barData, memLogScale);
+
+  // Line: peak memory across scales
+  const scales = ['medium', 'large', 'xlarge'];
+  const lineData = fws.map(fw => ({
+    label: FW_LABELS[fw],
+    data: scales.map(s => DATA[fw]?.[s]?.mem ?? null),
+    borderColor: FW_COLORS[fw], backgroundColor: FW_COLORS[fw] + '33',
+    pointRadius: 5, pointHoverRadius: 7, tension: 0.3, spanGaps: false,
+  }));
+  if (memCharts.line) memCharts.line.destroy();
+  memCharts.line = makeMemLineChart('chart-scale-mem', ['100K', '1M', '10M'], lineData, memLogScale);
+}
+
+// ── Overall summary: speed vs memory scatter (one point per engine) ──
+let summaryChart = null;
+function geomean(arr) {
+  const xs = arr.filter(v => typeof v === 'number' && v > 0);
+  if (!xs.length) return null;
+  return Math.exp(xs.reduce((a, b) => a + Math.log(b), 0) / xs.length);
+}
+function buildSummaryChart() {
+  const fws = activeFW();
+  const scales = ['medium', 'large', 'xlarge'];
+  const timeKeys = ['read_turtle', 'write_turtle', 'read_ntriples', 'write_ntriples', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6'];
+  const datasets = fws.map(fw => {
+    const times = [];
+    const mems = [];
+    scales.forEach(s => {
+      const row = DATA[fw]?.[s]; if (!row) return;
+      timeKeys.forEach(k => { const v = row[k]; if (typeof v === 'number') times.push(v * 1000); }); // ms
+      if (typeof row.mem === 'number') mems.push(row.mem);
+    });
+    const x = geomean(times);
+    const y = mems.length ? mems.reduce((a, b) => a + b, 0) / mems.length : null;
+    return {
+      label: FW_LABELS[fw],
+      data: (x !== null && y !== null) ? [{ x, y }] : [],
+      backgroundColor: FW_COLORS[fw], borderColor: FW_COLORS[fw],
+      pointRadius: 8, pointHoverRadius: 11,
+    };
+  });
+  if (summaryChart) summaryChart.destroy();
+  const ctx = document.getElementById('chart-summary').getContext('2d');
+  summaryChart = new Chart(ctx, {
+    type: 'scatter',
+    data: { datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { font: { size: 11, family: 'Inter' }, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmtMs(c.raw.x/1000)} · ${fmtMB(c.raw.y)}` } }
+      },
+      scales: {
+        x: { type: 'logarithmic', title: { display: true, text: 'Overall speed — geomean of all ops (faster ←)', font: { size: 11, family: 'Inter' } },
+             grid: { color: '#f0f0f0' }, ticks: { font: { size: 10, family: 'Inter' }, callback: v => v >= 1000 ? (v/1000).toFixed(1)+'s' : v+'ms' } },
+        y: { type: 'logarithmic', title: { display: true, text: 'Avg peak memory (leaner ↓)', font: { size: 11, family: 'Inter' } },
+             grid: { color: '#f0f0f0' }, ticks: { font: { size: 10, family: 'Inter' }, callback: v => v >= 1024 ? (v/1024).toFixed(1)+'GB' : v+'MB' } }
+      }
+    }
+  });
 }
 
 // ── Bar chart factory ──
-function makeBarChart(canvasId, labels, datasets, logScale) {
+function fmtMB(v) {
+  if (v === null || v === undefined) return '—';
+  return v >= 1024 ? (v / 1024).toFixed(2) + ' GB' : v.toFixed(v < 10 ? 1 : 0) + ' MB';
+}
+
+function makeBarChart(canvasId, labels, datasets, logScale, unit) {
+  unit = unit || 'ms';
+  const isMem = unit === 'MB';
   const ctx = document.getElementById(canvasId).getContext('2d');
   return new Chart(ctx, {
     type: 'bar',
@@ -1055,7 +1377,8 @@ function makeBarChart(canvasId, labels, datasets, logScale) {
           callbacks: {
             label: function(ctx) {
               const v = ctx.raw;
-              return v !== null ? `${ctx.dataset.label}: ${fmtMs(v / 1000)}` : `${ctx.dataset.label}: N/A`;
+              if (v === null || v === undefined) return `${ctx.dataset.label}: N/A`;
+              return `${ctx.dataset.label}: ${isMem ? fmtMB(v) : fmtMs(v / 1000)}`;
             }
           }
         }
@@ -1067,11 +1390,13 @@ function makeBarChart(canvasId, labels, datasets, logScale) {
         },
         y: {
           type: logScale ? 'logarithmic' : 'linear',
-          title: { display: true, text: 'ms', font: { size: 11, family: 'Inter' } },
+          title: { display: true, text: unit, font: { size: 11, family: 'Inter' } },
           grid: { color: '#f0f0f0' },
           ticks: {
             font: { size: 10, family: 'Inter' },
-            callback: v => v >= 1000 ? (v/1000).toFixed(1) + 's' : v.toFixed(v < 1 ? 2 : 0) + 'ms'
+            callback: v => isMem
+              ? (v >= 1024 ? (v/1024).toFixed(1) + 'GB' : v + 'MB')
+              : (v >= 1000 ? (v/1000).toFixed(1) + 's' : v.toFixed(v < 1 ? 2 : 0) + 'ms')
           }
         }
       }
@@ -1119,9 +1444,14 @@ function makeLineChart(canvasId, scaleLabels, datasets) {
   });
 }
 
+// ── Metric mode ('speed' shows time, 'memory' shows peak RSS) ──
+let ioMetric = 'speed';
+let queryMetric = 'speed';
+
 // ── Build IO charts (filtered) ──
 function buildIOCharts(scale, log) {
   const fws = activeFW();
+  const mem = ioMetric === 'memory';
   ['read_turtle', 'write_turtle', 'read_ntriples', 'write_ntriples'].forEach(op => {
     const chartId = {
       read_turtle: 'chart-read-ttl', write_turtle: 'chart-write-ttl',
@@ -1130,22 +1460,25 @@ function buildIOCharts(scale, log) {
     if (ioCharts[op]) ioCharts[op].destroy();
 
     const datasets = fws.map(fw => {
-      const v = DATA[fw]?.[scale]?.[op];
+      let v;
+      if (mem) v = MEMOPS[fw]?.[scale]?.[op];
+      else { const t = DATA[fw]?.[scale]?.[op]; v = (t !== null && t !== undefined) ? t * 1000 : null; }
       return {
         label: FW_LABELS[fw],
-        data: [v !== null && v !== undefined ? v * 1000 : null],
+        data: [v !== null && v !== undefined ? v : null],
         backgroundColor: FW_COLORS[fw],
         borderRadius: 4,
         barPercentage: 0.85,
       };
     });
-    ioCharts[op] = makeBarChart(chartId, [''], datasets, log);
+    ioCharts[op] = makeBarChart(chartId, [''], datasets, log, mem ? 'MB' : 'ms');
   });
 }
 
 // ── Build Query charts (filtered) ──
 function buildQueryCharts(scale, log) {
   const fws = activeFW();
+  const mem = queryMetric === 'memory';
   const ops = coldMode ? Q_COLD_OPS : Q_OPS;
   Q_OPS.forEach((q, i) => {
     const dataKey = ops[i];
@@ -1153,16 +1486,18 @@ function buildQueryCharts(scale, log) {
     if (queryCharts[q]) queryCharts[q].destroy();
 
     const datasets = fws.map(fw => {
-      const v = DATA[fw]?.[scale]?.[dataKey];
+      let v;
+      if (mem) v = MEMOPS[fw]?.[scale]?.[q];  // memory is per-op, warm/cold agnostic
+      else { const t = DATA[fw]?.[scale]?.[dataKey]; v = (t !== null && t !== undefined) ? t * 1000 : null; }
       return {
         label: FW_LABELS[fw],
-        data: [v !== null && v !== undefined ? v * 1000 : null],
+        data: [v !== null && v !== undefined ? v : null],
         backgroundColor: FW_COLORS[fw],
         borderRadius: 4,
         barPercentage: 0.85,
       };
     });
-    queryCharts[q] = makeBarChart(chartId, [''], datasets, log);
+    queryCharts[q] = makeBarChart(chartId, [''], datasets, log, mem ? 'MB' : 'ms');
   });
 }
 
@@ -1289,6 +1624,29 @@ function toggleCold() {
   buildTable('query-table', ops, labels, currentQueryScale);
 }
 
+function toggleIOMetric() {
+  ioMetric = ioMetric === 'speed' ? 'memory' : 'speed';
+  const b = document.getElementById('io-metric-toggle');
+  b.classList.toggle('active', ioMetric === 'memory');
+  b.textContent = ioMetric === 'memory' ? 'Show speed' : 'Show memory';
+  buildIOCharts(currentIOScale, ioLogScale);
+}
+
+function toggleQueryMetric() {
+  queryMetric = queryMetric === 'speed' ? 'memory' : 'speed';
+  const b = document.getElementById('query-metric-toggle');
+  b.classList.toggle('active', queryMetric === 'memory');
+  b.textContent = queryMetric === 'memory' ? 'Show speed' : 'Show memory';
+  buildQueryCharts(currentQueryScale, queryLogScale);
+}
+
+let memLogScale = false;
+function toggleMemLog() {
+  memLogScale = !memLogScale;
+  document.getElementById('mem-log-toggle').classList.toggle('active', memLogScale);
+  buildMemoryCharts();
+}
+
 // ── Expandable SPARQL rows ──
 function toggleQuery(qid) {
   const detail = document.getElementById('detail-' + qid);
@@ -1304,6 +1662,8 @@ buildQueryCharts('large', false);
 buildTable('io-table', IO_OPS, IO_LABELS, 'large');
 buildTable('query-table', coldMode ? Q_COLD_OPS : Q_OPS, coldMode ? Q_COLD_LABELS : Q_LABELS, 'large');
 buildScaleCharts();
+buildMemoryCharts();
+buildSummaryChart();
 </script>
 
 </body>

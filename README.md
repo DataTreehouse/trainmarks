@@ -1,6 +1,6 @@
 # RDF Framework Benchmark
 
-A reproducible benchmark comparing thirteen RDF frameworks and triplestores on I/O performance (read/write Turtle and N-Triples) and SPARQL query performance across three dataset scales (100K, 1M, and 10M triples).
+A reproducible benchmark comparing RDF frameworks and triplestores on I/O performance (read/write Turtle and N-Triples), SPARQL query performance, and **peak memory usage** across three dataset scales (100K, 1M, and 10M triples).
 
 **Results:** Open `benchmark.html` in a browser to view the interactive report with charts, framework filters, preset groups, and expandable query details.
 
@@ -8,9 +8,10 @@ A reproducible benchmark comparing thirteen RDF frameworks and triplestores on I
 
 | Framework | Language | Store type | Version | License |
 |-----------|----------|------------|---------|---------|
-| maplib | Python (Rust core) | In-memory (Polars + Arrow) | 0.20.15 | Apache 2.0 |
-| maplib (disk) | Python (Rust core) | Disk-backed (Polars + Arrow) | 0.20.15 | Proprietary |
-| oxigraph | Python (Rust core) | Disk-backed (RocksDB) | 0.5.9 | MIT / Apache 2.0 |
+| maplib | Python (Rust core) | In-memory (Polars + Arrow) | 0.20.29 | Apache 2.0 |
+| maplib (disk) | Python (Rust core) | Disk-backed (Polars + Arrow) | 0.20.29 | Proprietary |
+| oxigraph | Python (Rust core) | In-memory (RocksDB engine, no path) | 0.5.9 | MIT / Apache 2.0 |
+| oxigraph (disk) | Python (Rust core) | Disk-backed (RocksDB, on-disk path) | 0.5.9 | MIT / Apache 2.0 |
 | rdflib | Python (pure) | In-memory (dict-of-dicts) | 7.6.0 | BSD 3-Clause |
 | Apache Jena | Java | In-memory Model | 6.1.0 | Apache 2.0 |
 | Eclipse RDF4J | Java | MemoryStore SAIL | 6.0.0 | EDL 1.0 |
@@ -19,6 +20,7 @@ A reproducible benchmark comparing thirteen RDF frameworks and triplestores on I
 | GraphDB | Java (Docker) | RDF4J-based, on-disk persistence | 10.8.0 | Proprietary (free tier) |
 | dotNetRDF | C# (Docker) | In-memory TripleStore | 3.5.2 | MIT |
 | Neo4j + n10s | Java (Docker) | Native property graph + RDF import | 5.26 + n10s 5.26.0 | GPL v3 (Community) |
+| TentrisDB * | C++ (Docker) | Tensor-based, disk-based, worst-case-optimal joins | latest (beta) | Proprietary (free tier) |
 | Blazegraph | Java (Docker) | In-memory / RWStore journal | 2.1.5 | GPL v2 |
 | Comunica | TypeScript (Node.js) | Client-side query engine over files | latest | MIT |
 
@@ -38,9 +40,10 @@ A reproducible benchmark comparing thirteen RDF frameworks and triplestores on I
   ```bash
   docker pull adfreiburg/qlever
   docker pull openlink/virtuoso-opensource-7:latest
-  docker pull ontotext/graphdb:11.4.3
+  docker pull ontotext/graphdb:10.8.0
   docker pull mcr.microsoft.com/dotnet/sdk:8.0
-  docker pull neo4j:2025.06-community
+  docker pull neo4j:5.26-community
+  docker pull ghcr.io/tentris/tentris:latest
   docker pull lyrasis/blazegraph:2.1.5
   ```
 
@@ -135,7 +138,9 @@ cd blazegraph && python bench_blazegraph.py && cd ..
 
 **Notes on Docker benchmarks:**
 - GraphDB requires the image to be pulled manually first: `docker pull ontotext/graphdb:10.8.0`
+- GraphDB is pinned to 10.8.0 (the last free-tier release). From 11.0 onward, GraphDB Free is no longer bundled and requires a manually installed license, so it is not used here to keep the benchmark reproducible without registration.
 - Neo4j automatically downloads the neosemantics (n10s) plugin JAR on first run
+- TentrisDB is BETA and its native engine is Linux/x86_64 only; on Apple silicon it runs under linux/amd64 emulation, so its timings are indicative only and **not directly comparable** to the natively-running engines. It runs in the free (non-commercial) mode with no license. Data is loaded via the SPARQL Graph Store Protocol (HTTP POST of the N-Triples file), and `read_ntriples` times that upload into a freshly-started, empty server.
 - dotNetRDF builds a Docker image from source (Dockerfile + C# project)
 - dotNetRDF's xlarge (10M) fails with OOM — results are recorded as TIMEOUT
 - All Docker containers are cleaned up automatically after benchmarking
@@ -184,9 +189,11 @@ All frameworks use the same data files and the same queries. Each operation has 
 
 **I/O:** Single timed run (no averaging), since allocation overhead is part of the real-world cost.
 
+**Memory:** Every operation records a peak-memory figure, but the basis differs by engine family and the three are **not directly comparable**: Python engines sample peak process RSS (psutil), Java engines sample peak JVM heap used, and Docker engines sample peak container memory (`docker stats`). The dashboard reports per-scale peak memory per engine; compare within a basis. (Tentris runs under emulation on Apple silicon, so its figures — memory and timing — are indicative only.)
+
 **Write operations:** Native library frameworks (maplib, oxigraph, rdflib, Jena, RDF4J, dotNetRDF) benchmark writing Turtle and N-Triples. Server-based frameworks (QLever, Virtuoso, GraphDB, Neo4j) record write operations as N/A since they are database servers that don't serialize RDF files.
 
-**oxigraph:** Uses `pyoxigraph.Store()` without a path argument, creating an anonymous temporary store backed by RocksDB.
+**oxigraph:** The `oxigraph` benchmark uses `pyoxigraph.Store()` with **no path**, which per pyoxigraph's docs keeps all data **in memory and never writes to disk** — so it measures the in-memory engine (RocksDB is the underlying engine, but no on-disk database is created). The separate `oxigraph (disk)` benchmark passes a filesystem path to `Store()`, creating a genuine on-disk RocksDB database, to measure disk-backed performance.
 
 **Neo4j + n10s:** Imports RDF via the neosemantics plugin which maps RDF triples to Neo4j's native labeled property graph model. Import times include this RDF-to-property-graph conversion. Queries are Cypher translations of the SPARQL benchmarks.
 
