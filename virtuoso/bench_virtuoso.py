@@ -15,7 +15,7 @@ I/O mapping:
 
 Prerequisites:
   - Docker installed and running
-  - Image: docker pull openlink/virtuoso-opensource-7:latest
+  - Image: docker pull openlink/virtuoso-opensource-7:7.2.17-r25.1-g2850f18-ubuntu
 """
 
 import time
@@ -35,7 +35,7 @@ RESULTS = []
 TIMEOUT = 600       # 10 minutes default
 LOAD_TIMEOUT = 600  # 10 minutes for bulk loading (xlarge)
 
-VIRTUOSO_IMAGE = "openlink/virtuoso-opensource-7:latest"
+VIRTUOSO_IMAGE = "openlink/virtuoso-opensource-7:7.2.17-r25.1-g2850f18-ubuntu"
 VIRTUOSO_HTTP_PORT = 8891   # Non-standard to avoid conflicts
 VIRTUOSO_ISQL_PORT = 1112   # Non-standard to avoid conflicts
 CONTAINER_NAME = "virtuoso-bench"
@@ -400,7 +400,7 @@ if __name__ == "__main__":
         exit(1)
 
     # Check if Virtuoso image is available
-    rc, stdout, _ = docker_run(["images", "-q", VIRTUOSO_IMAGE.split(":")[0]])
+    rc, stdout, _ = docker_run(["images", "-q", VIRTUOSO_IMAGE])
     if not stdout.strip():
         print(f"Pulling Virtuoso Docker image ({VIRTUOSO_IMAGE})...")
         docker_run(["pull", VIRTUOSO_IMAGE], timeout=600)

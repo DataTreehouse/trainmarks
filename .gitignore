@@ -56,3 +56,6 @@ maplib-lux-benchmark/
 
 # OS
 .DS_Store
+
+# Conference talk deck (hosted separately on veronahe.no)
+talk/

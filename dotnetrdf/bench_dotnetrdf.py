@@ -42,7 +42,7 @@ def build_image():
     # Create a Dockerfile
     dockerfile = os.path.join(SCRIPT_DIR, "Dockerfile")
     with open(dockerfile, "w") as f:
-        f.write("""FROM mcr.microsoft.com/dotnet/sdk:8.0
+        f.write("""FROM mcr.microsoft.com/dotnet/sdk:10.0
 
 WORKDIR /app
 COPY BenchDotNetRdf.csproj .

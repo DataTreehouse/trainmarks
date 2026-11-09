@@ -35,7 +35,7 @@ RESULTS = []
 TIMEOUT = 600  # 10 minutes default
 LOAD_TIMEOUT = 600  # 10 minutes for large imports
 
-NEO4J_IMAGE = "neo4j:5.26-community"
+NEO4J_IMAGE = "neo4j:2025.06.2-community"
 NEO4J_HTTP_PORT = 7474
 NEO4J_BOLT_PORT = 7687
 CONTAINER_NAME = "neo4j-bench"
@@ -46,7 +46,7 @@ from docker_mem import ContainerMemSampler  # noqa: E402
 MEM = ContainerMemSampler(CONTAINER_NAME)
 
 # n10s plugin — version must match Neo4j major.minor
-N10S_VERSION = "5.26.0"
+N10S_VERSION = "2025.06.1"
 N10S_JAR_URL = f"https://github.com/neo4j-labs/neosemantics/releases/download/{N10S_VERSION}/neosemantics-{N10S_VERSION}.jar"
 N10S_JAR_NAME = f"neosemantics-{N10S_VERSION}.jar"
 

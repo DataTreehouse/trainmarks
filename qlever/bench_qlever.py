@@ -15,7 +15,7 @@ I/O mapping:
 
 Prerequisites:
   - Docker installed and running
-  - QLever Docker image: docker pull adfreiburg/qlever
+  - QLever Docker image: docker pull adfreiburg/qlever:commit-0998359ab0
 """
 
 import time
@@ -35,7 +35,7 @@ RESULTS = []
 TIMEOUT = 600  # 10 minutes default
 INDEX_TIMEOUT = 600  # 10 minutes for index building (xlarge)
 
-QLEVER_IMAGE = "adfreiburg/qlever"
+QLEVER_IMAGE = "adfreiburg/qlever:commit-0998359ab0"  # = latest on 2026-11-08
 QLEVER_PORT = 7019  # Use non-standard port to avoid conflicts
 CONTAINER_NAME = "qlever-bench"
 

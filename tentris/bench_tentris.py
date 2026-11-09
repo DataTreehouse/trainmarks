@@ -5,10 +5,10 @@ Runs on medium (~100K), large (~1M), and xlarge (~10M) datasets.
 Tentris is a tensor-based, disk-based RDF triplestore (dice-group / Tentris GmbH).
 
 ⚠️  CAVEATS — read before trusting these numbers:
-  * Tentris is currently BETA (latest release ~v0.22.x, no 1.0 yet).
-  * The native engine is Linux-only (glibc >= 2.34). On Apple silicon this image
-    runs under linux/amd64 EMULATION (qemu), so timings are NOT directly
-    comparable to the natively-running engines. Treat as indicative only.
+  * The engine is Linux-only (glibc >= 2.34). Since v1.x the image is published
+    for both linux/amd64 and linux/arm64, so on Apple silicon Docker runs it
+    natively. (Older runs used an amd64-only image under qemu emulation; those
+    numbers are not comparable with native runs.)
   * Runs in the free (non-commercial) mode — no license file mounted.
 
 I/O mapping:
@@ -40,10 +40,10 @@ QUERIES_DIR = os.path.join(os.path.dirname(__file__), "..", "queries")
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 RESULTS = []
 TIMEOUT = 600
-LOAD_TIMEOUT = 1800  # emulated container + HTTP upload can be slow
+LOAD_TIMEOUT = 1800  # generous: HTTP upload of the whole N-Triples file
 STORAGE_BASE = os.path.join(os.path.dirname(__file__), "tentris-storage")
 
-TENTRIS_IMAGE = "ghcr.io/tentris/tentris:latest"
+TENTRIS_IMAGE = "ghcr.io/tentris/tentris:v1.5.0"
 TENTRIS_PORT = 9080
 CONTAINER_NAME = "tentris-bench"
 MEM = ContainerMemSampler(CONTAINER_NAME)
@@ -191,7 +191,7 @@ def start_and_load(scale, timeout):
 
 def bench_scale(scale):
     print(f"\n{'='*60}")
-    print(f"TentrisDB (Docker, BETA, emulated on arm64) — {scale} dataset")
+    print(f"TentrisDB (Docker) — {scale} dataset")
     print(f"{'='*60}")
 
     MEM.reset()
@@ -256,10 +256,10 @@ if __name__ == "__main__":
 
     rc, stdout, _ = docker_run(["images", "-q", TENTRIS_IMAGE])
     if not stdout.strip():
-        print(f"Pulling Tentris image ({TENTRIS_IMAGE})... (may run under emulation on arm64)")
+        print(f"Pulling Tentris image ({TENTRIS_IMAGE})...")
         docker_run(["pull", TENTRIS_IMAGE], timeout=900)
 
-    print("TentrisDB benchmark starting (Docker, BETA)...")
+    print("TentrisDB benchmark starting (Docker)...")
     MEM.start()
 
     for scale in ["medium", "large", "xlarge"]:

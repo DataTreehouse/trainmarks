@@ -1,0 +1,2 @@
+PREFIX : <http://benchmark.example/>
+SELECT ?product ?price WHERE { ?product :unitPrice ?price } ORDER BY ?product ?price

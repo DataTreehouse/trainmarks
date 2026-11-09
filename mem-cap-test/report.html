@@ -1,0 +1,111 @@
+<meta charset="utf-8">
+<title>maplib in-memory — memory floor report</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root { --ink:#1e2327; --muted:#5b6570; --line:#e6e6e6; --card:#fff; --bg:#faf9f7;
+          --green:#2d6a4f; --amber:#e08a1e; --red:#d64545; --grey:#c7ccd1; --accent:#2d6a4f; }
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,Inter,Segoe UI,Roboto,sans-serif; color:var(--ink);
+         background:var(--bg); margin:0; padding:0 1.2rem 4rem; line-height:1.55; }
+  .wrap { max-width:960px; margin:0 auto; }
+  header { padding:2.5rem 0 1rem; border-bottom:1px solid var(--line); margin-bottom:1.5rem; }
+  h1 { font-size:1.7rem; margin:0 0 .4rem; }
+  h1 strong { color:var(--accent); }
+  h2 { font-size:1.15rem; margin:2.2rem 0 .3rem; }
+  .sub { color:var(--muted); font-size:.9rem; }
+  .meta { color:var(--muted); font-size:.8rem; margin-top:.6rem; }
+  p { font-size:.93rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px;
+          padding:1.1rem 1.2rem; margin:1rem 0; }
+  .chart-wrap { position:relative; height:340px; }
+  table { border-collapse:collapse; width:100%; font-size:.88rem; margin-top:.4rem; }
+  th,td { text-align:left; padding:.45rem .6rem; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:600; }
+  .tag { display:inline-block; padding:.1rem .5rem; border-radius:99px; font-size:.78rem; font-weight:600; color:#fff; }
+  .ok{background:var(--green)} .warn{background:var(--amber)} .bad{background:var(--red)}
+  .callout { background:#f0f4f1; border-left:4px solid var(--accent); border-radius:6px;
+             padding:.8rem 1rem; font-size:.9rem; margin:1rem 0; }
+  .legend { font-size:.8rem; color:var(--muted); margin-top:.4rem; }
+</style>
+
+<div class="wrap">
+<header>
+  <h1><strong>maplib</strong> in-memory — how it behaves with less RAM</h1>
+  <div class="sub">Running the in-memory maplib workload under a hard Docker memory cap (kernel OOM-kills if exceeded; swap disabled). The question: how does it cope as available memory shrinks?</div>
+  <div class="meta">maplib 0.20.26 (open-source pip build) · datasets 100K / 1M / 10M triples · cap applies to the whole process (Python + maplib + Arrow)</div>
+</header>
+
+<div class="callout">
+  <strong>Verdict:</strong> in-memory maplib is <strong>all-or-nothing</strong> — it either fits its full working set in RAM or the kernel kills it; there is no graceful slowdown or spill to disk. For <strong>10M triples the floor is ~3.5&nbsp;GB</strong> (fails at 3&nbsp;GB, succeeds at 3.5&nbsp;GB). And the <strong>query phase, not loading, sets the floor</strong>: at 3&nbsp;GB it loaded all the data but was killed running the SPARQL queries.
+</div>
+
+<h2>1. 10M triples: what survives each memory cap</h2>
+<p class="sub">Peak memory reached versus the hard cap. Green = full run completed; amber = data loaded but killed during queries; red = killed during load.</p>
+<div class="card"><div class="chart-wrap"><canvas id="c1"></canvas></div>
+<div class="legend">Grey bar = the hard cap; coloured bar = peak memory maplib actually reached before finishing or being killed.</div></div>
+<table>
+  <tr><th>Cap</th><th>Outcome</th><th>Peak reached</th></tr>
+  <tr><td>2 GB</td><td><span class="tag bad">OOM during load</span></td><td>— (killed before first op)</td></tr>
+  <tr><td>3 GB</td><td><span class="tag warn">Loaded, OOM during queries</span></td><td>3,011 MB (reads only)</td></tr>
+  <tr><td>3.5 GB</td><td><span class="tag ok">Completed</span></td><td>3,119 MB</td></tr>
+  <tr><td>4 GB</td><td><span class="tag ok">Completed</span></td><td>3,745 MB</td></tr>
+</table>
+
+<h2>2. Why 3 GB dies: it's the query phase</h2>
+<p class="sub">Peak memory at each operation over the 10M graph. At 3 GB the reads all finish (~3 GB), then the very first query pushes it over the cap and the process is killed — the line stops. At 3.5 GB the same queries fit and it runs to the end.</p>
+<div class="card"><div class="chart-wrap"><canvas id="c2"></canvas></div></div>
+
+<h2>3. Memory grows with data</h2>
+<p class="sub">Peak memory by dataset size (measured at the 4 GB cap). Roughly linear in triple count — which is exactly why a fixed machine hits a wall as graphs grow.</p>
+<div class="card"><div class="chart-wrap"><canvas id="c3"></canvas></div></div>
+
+<p class="meta">This is the in-memory engine specifically; the disk-backed maplib variant exists precisely to trade this hard RAM wall for bounded memory at the cost of speed.</p>
+</div>
+
+<script>
+const green='#2d6a4f', amber='#e08a1e', red='#d64545', grey='#c7ccd1';
+const mb = v => v>=1024 ? (v/1024).toFixed(1)+' GB' : v+' MB';
+
+// Chart 1: cap vs peak reached (10M)
+new Chart(document.getElementById('c1'), {
+  type:'bar',
+  data:{ labels:['2 GB','3 GB','3.5 GB','4 GB'],
+    datasets:[
+      { label:'Hard cap', data:[2048,3072,3584,4096], backgroundColor:grey, borderRadius:3, barPercentage:0.8 },
+      { label:'Peak reached', data:[2048,3011,3119,3745],
+        backgroundColor:[red,amber,green,green], borderRadius:4, barPercentage:0.8 },
+    ]},
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{position:'bottom'},
+      tooltip:{ callbacks:{ label:c=> c.datasetIndex===1 && c.dataIndex===0
+        ? 'Peak reached: killed at load (~cap)' : `${c.dataset.label}: ${mb(c.raw)}` } } },
+    scales:{ y:{ title:{display:true,text:'MB'}, ticks:{ callback:v=> v>=1024?(v/1024)+'GB':v+'MB' } } } }
+});
+
+// Chart 2: per-op peak, 3g vs 3.5g (10M)
+const ops=['Read TTL','Write TTL','Write NT','Read NT','Q1','Q2','Q3','Q4','Q5','Q6'];
+new Chart(document.getElementById('c2'), {
+  type:'line',
+  data:{ labels:ops, datasets:[
+    { label:'3 GB cap (killed)', data:[2910.2,2326.5,1200.6,3011.2,null,null,null,null,null,null],
+      borderColor:red, backgroundColor:red+'22', pointRadius:4, tension:0.25, spanGaps:false },
+    { label:'3.5 GB cap (completed)', data:[3001.5,2440.0,1317.1,3119.5,2694.2,2365.6,2357.7,2349.3,2313.0,2302.3],
+      borderColor:green, backgroundColor:green+'22', pointRadius:4, tension:0.25, spanGaps:false },
+  ]},
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{position:'bottom'},
+      tooltip:{ callbacks:{ label:c=> c.raw==null?`${c.dataset.label}: killed`:`${c.dataset.label}: ${mb(c.raw)}` } } },
+    scales:{ y:{ title:{display:true,text:'peak MB'}, ticks:{ callback:v=> v>=1024?(v/1024).toFixed(1)+'GB':v+'MB' } } } }
+});
+
+// Chart 3: peak by scale (4g)
+new Chart(document.getElementById('c3'), {
+  type:'bar',
+  data:{ labels:['100K','1M','10M'],
+    datasets:[{ label:'Peak memory', data:[450.3,993.0,3745.0],
+      backgroundColor:'#2d6a4f', borderRadius:4, barPercentage:0.6 }]},
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>mb(c.raw) } } },
+    scales:{ y:{ title:{display:true,text:'MB'}, ticks:{ callback:v=> v>=1024?(v/1024).toFixed(1)+'GB':v+'MB' } } } }
+});
+</script>

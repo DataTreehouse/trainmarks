@@ -24,6 +24,27 @@ run_bench() {
 echo "=== RDF Benchmark Suite ==="
 echo "Root: $ROOT"
 
+# ── Pre-flight: fail early, and record exactly which versions this run uses ──
+mkdir -p "$ROOT/results"
+JAVA_MAJOR=$(java -version 2>&1 | head -1 | sed -E 's/.*version "([0-9]+).*/\1/')
+if [ -n "$JAVA_MAJOR" ] && [ "$JAVA_MAJOR" -lt 25 ] 2>/dev/null; then
+    echo "!! Java $JAVA_MAJOR found — RDF4J 6.x needs Java 25+. Aborting."; exit 1
+fi
+if command -v docker &> /dev/null && ! docker info &> /dev/null; then
+    echo "!! docker is installed but the daemon is not running — start Docker Desktop first. Aborting."; exit 1
+fi
+MAPLIB_VERSION=$(cd "$ROOT/python-maplib" && uv run python -c 'import importlib.metadata as m; print(m.version("maplib"))' 2>/dev/null || echo "NOT FOUND")
+{
+    echo "run started: $(date -u +%FT%TZ)  host: $(uname -sm)"
+    echo "maplib:      $MAPLIB_VERSION   (from the default interpreter uv resolves)"
+    echo "pyoxigraph:  0.5.13   pyrudof: 0.3.38   rdflib: 7.6.0"
+    echo "jena:        $(grep -oE '<jena.version>[^<]+' "$ROOT/java-jena/pom.xml" | cut -d'>' -f2)   rdf4j: $(grep -oE '<rdf4j.version>[^<]+' "$ROOT/java-rdf4j/pom.xml" | cut -d'>' -f2)"
+    echo "java:        $(java -version 2>&1 | head -1)"
+    echo "dotNetRDF:   $(grep -oE 'dotNetRdf" Version="[^"]+' "$ROOT/dotnetrdf/BenchDotNetRdf.csproj" | cut -d'"' -f3) on $(grep -oE 'dotnet/sdk:[0-9.]+' "$ROOT/dotnetrdf/bench_dotnetrdf.py")"
+    grep -hE '^[A-Z0-9_]+_(IMAGE|VERSION) = ' "$ROOT"/qlever/bench_qlever.py "$ROOT"/virtuoso/bench_virtuoso.py \
+        "$ROOT"/graphdb/bench_graphdb.py "$ROOT"/neo4j/bench_neo4j.py "$ROOT"/tentris/bench_tentris.py
+} | tee "$ROOT/results/versions.txt"
+
 # Python frameworks
 run_bench "1/13" "maplib" \
     "cd '$ROOT/python-maplib' && uv run --with psutil bench_maplib.py"
@@ -32,13 +53,16 @@ run_bench "2/13" "maplib (disk)" \
     "cd '$ROOT/python-maplib-disk' && uv run --with psutil bench_maplib_disk.py"
 
 run_bench "3/13" "oxigraph" \
-    "cd '$ROOT/python-oxigraph' && uv run --with pyoxigraph --with psutil bench_oxigraph.py"
+    "cd '$ROOT/python-oxigraph' && uv run --with pyoxigraph==0.5.13 --with psutil bench_oxigraph.py"
 
 run_bench "3b/13" "oxigraph (disk)" \
-    "cd '$ROOT/python-oxigraph-disk' && uv run --with pyoxigraph --with psutil bench_oxigraph_disk.py"
+    "cd '$ROOT/python-oxigraph-disk' && uv run --with pyoxigraph==0.5.13 --with psutil bench_oxigraph_disk.py"
 
-run_bench "4/13" "rdflib (slow)" \
-    "cd '$ROOT/python-rdflib' && uv run --with rdflib --with psutil bench_rdflib.py"
+run_bench "4/14" "rdflib (slow)" \
+    "cd '$ROOT/python-rdflib' && uv run --with rdflib==7.6.0 --with psutil bench_rdflib.py"
+
+run_bench "4b/14" "rudof" \
+    "cd '$ROOT/python-rudof' && uv run --with pyrudof==0.3.38 --with psutil bench_rudof.py"
 
 # Java frameworks
 if command -v mvn &> /dev/null; then
@@ -68,10 +92,10 @@ if command -v docker &> /dev/null; then
     run_bench "11/13" "Neo4j + n10s (Docker)" \
         "cd '$ROOT/neo4j' && uv run bench_neo4j.py"
 
-    run_bench "12/13" "TentrisDB (Docker, BETA/emulated)" \
+    run_bench "12/13" "TentrisDB (Docker)" \
         "cd '$ROOT/tentris' && uv run bench_tentris.py"
 else
-    SKIPPED="$SKIPPED  - QLever, Virtuoso, GraphDB, dotNetRDF, Neo4j, Blazegraph (docker not found)\n"
+    SKIPPED="$SKIPPED  - QLever, Virtuoso, GraphDB, dotNetRDF, Neo4j, TentrisDB (docker not found)\n"
 fi
 
 # Summary

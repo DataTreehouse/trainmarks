@@ -38,10 +38,11 @@ OP_MAP = {
 
 # Frameworks to include (skip kolibrie)
 FRAMEWORKS = [
-    "maplib", "oxigraph", "rdflib", "jena", "rdf4j",
-    "qlever", "virtuoso", "maplib_disk", "graphdb",
-    "dotnetrdf", "neo4j",
+    "maplib", "maplib_disk", "oxigraph", "oxigraph_disk", "rudof", "rdflib",
+    "jena", "rdf4j", "qlever", "virtuoso", "graphdb",
+    "dotnetrdf", "neo4j", "tentris",
 ]
+MEM_OPS = ["read_turtle", "write_turtle", "read_ntriples", "write_ntriples", "q1", "q2", "q3", "q4", "q5", "q6"]
 
 SCALES = ["medium", "large", "xlarge"]
 OPS = ["read_turtle", "write_turtle", "read_ntriples", "write_ntriples", "q1", "q2", "q3", "q4", "q5", "q6", "q1_cold", "q2_cold", "q3_cold", "q4_cold", "q5_cold", "q6_cold"]
@@ -60,6 +61,14 @@ def load_results():
                 continue
 
             scale = entry["scale"]
+            if entry["operation"] == "peak_memory":
+                # Docker engines: one container-level peak per scale
+                peak = entry.get("peak_mb")
+                if peak is not None:
+                    d = data.setdefault(fw, {}).setdefault(scale, {})
+                    d["_scale_peak"] = round(float(peak), 1)
+                    d["mem"] = max(d.get("mem") or 0, d["_scale_peak"])
+                continue
             op = OP_MAP.get(entry["operation"])
             if op is None:
                 continue
@@ -74,6 +83,22 @@ def load_results():
                     val = None
 
             data.setdefault(fw, {}).setdefault(scale, {})[op] = val
+            if op in MEM_OPS and entry.get("peak_mb") is not None:
+                try:
+                    data[fw][scale]["memop_" + op] = round(float(entry["peak_mb"]), 1)
+                except (ValueError, TypeError):
+                    pass
+
+            # Track peak memory per scale (max across all operations)
+            peak = entry.get("peak_mb")
+            if peak is not None:
+                try:
+                    peak = round(float(peak), 1)
+                    cur = data[fw][scale].get("mem")
+                    if cur is None or peak > cur:
+                        data[fw][scale]["mem"] = peak
+                except (ValueError, TypeError):
+                    pass
 
     return data
 
@@ -103,13 +128,40 @@ def build_data_block(data):
             io_parts = [f"{op}: {format_value(vals.get(op))}" for op in OPS[:4]]
             q_parts = [f"{op}: {format_value(vals.get(op))}" for op in OPS[4:10]]
             cold_parts = [f"{op}: {format_value(vals.get(op))}" for op in OPS[10:]]
+            mem_val = format_value(vals.get("mem"))
             lines.append(f"    {scale}: {{")
             lines.append(f"      {', '.join(io_parts)},")
             lines.append(f"      {', '.join(q_parts)},")
-            lines.append(f"      {', '.join(cold_parts)}")
+            lines.append(f"      {', '.join(cold_parts)},")
+            lines.append(f"      mem: {mem_val}")
             lines.append(f"    }},")
         lines.append(f"  }},")
 
+    lines.append("};")
+    return "\n".join(lines)
+
+
+def build_memops_block(data):
+    """Build the JS MEMOPS object (peak MB per operation). Docker engines only report a
+    per-scale container peak, which is broadcast to every operation of that scale."""
+    lines = ["const MEMOPS = {"]
+    for fw in FRAMEWORKS:
+        if fw not in data:
+            continue
+        rows = []
+        for scale in SCALES:
+            vals = data[fw].get(scale)
+            if not vals:
+                continue
+            fallback = vals.get("_scale_peak")
+            parts = [f"{op}: {format_value(vals.get('memop_' + op, fallback))}" for op in MEM_OPS]
+            if all(p.endswith("null") for p in parts):
+                continue
+            rows.append(f"    {scale}: {{ {', '.join(parts)} }},")
+        if rows:
+            lines.append(f"  {fw}: {{")
+            lines.extend(rows)
+            lines.append("  },")
     lines.append("};")
     return "\n".join(lines)
 
@@ -126,6 +178,12 @@ def update_report(data):
 
     new_block = build_data_block(data) + "\n"
     html = html[:match.start()] + new_block + html[match.end():]
+
+    mem_match = re.search(r"const MEMOPS = \{.*?\n\};\s*\n", html, re.DOTALL)
+    if mem_match:
+        html = html[:mem_match.start()] + build_memops_block(data) + "\n" + html[mem_match.end():]
+    else:
+        print("  (no MEMOPS block found — per-operation memory not updated)")
 
     REPORT_PATH.write_text(html)
     return match.start(), match.end()

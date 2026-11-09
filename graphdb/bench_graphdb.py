@@ -13,7 +13,7 @@ I/O mapping:
 
 Prerequisites:
   - Docker installed and running
-  - GraphDB Docker image: docker pull ontotext/graphdb:10.8.0
+  - GraphDB Docker image: docker pull ontotext/graphdb:10.8.14
 """
 
 import time
@@ -33,7 +33,7 @@ RESULTS = []
 TIMEOUT = 600  # 10 minutes default
 LOAD_TIMEOUT = 600  # 10 minutes for large imports
 
-GRAPHDB_IMAGE = "ontotext/graphdb:10.8.0"
+GRAPHDB_IMAGE = "ontotext/graphdb:10.8.14"
 GRAPHDB_PORT = 7200
 CONTAINER_NAME = "graphdb-bench"
 
