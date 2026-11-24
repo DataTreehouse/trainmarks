@@ -204,10 +204,6 @@ All frameworks use the same data files and the same queries. The Python and Dock
 
 Trainmarks is released under the [Apache License 2.0](LICENSE). You can use, modify, fork and redistribute it, including commercially, as long as you include a copy of the license, keep existing copyright and attribution notices, and mark any files you change.
 
-The benchmark results in `results/` and the published report (`index.html`) are licensed under [CC BY 4.0](LICENSE-RESULTS). You can reuse the numbers and charts in talks, papers and blog posts, as long as you credit Trainmarks and link to this repository.
-
-To credit Trainmarks: Veronika Heimsbakk, *Trainmarks*, https://github.com/DataTreehouse/trainmarks
-
 ### Third-party software
 
 These licenses cover only the code and content in this repository. Running the benchmark downloads the frameworks and triplestores listed under [Frameworks tested](#frameworks-tested) as packages and Docker images, each under its own license. GraphDB and TentrisDB are proprietary free tiers (TentrisDB runs in its non-commercial mode). Check their terms before you use the benchmark commercially or publish your own results.
